@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'pf400_description'
+package_name = 'hidex_description'
 
 setup(
     name=package_name,
@@ -27,7 +27,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'pf400_description_client = pf400_description.pf400_description_client:main'
+            'hidex_description_client = hidex_description.hidex_description_client:main'
         ],
     },
 )
