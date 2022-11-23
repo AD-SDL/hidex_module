@@ -11,9 +11,9 @@ from launch_ros.substitutions import FindPackageShare
  
 def generate_launch_description():
 
-  pkg_share = FindPackageShare(package='pf400_description').find('pf400_description')
-  default_rviz_config_path = os.path.join(pkg_share, 'config/pf400_rviz_config.rviz')
-  default_urdf_model_path = os.path.join(pkg_share, 'urdf/pf400_robot.xacro') 
+  pkg_share = FindPackageShare(package='hidex_description').find('hidex_description')
+  default_rviz_config_path = os.path.join(pkg_share, 'config/hidex_rviz_config.rviz')
+  default_urdf_model_path = os.path.join(pkg_share, 'urdf/hidex_robot.xacro') 
  
   fake_hardware = LaunchConfiguration('fake_hardware')
   urdf_model = LaunchConfiguration('urdf_model')
@@ -78,11 +78,11 @@ def generate_launch_description():
     arguments=['-d', rviz_config_file])
 
   # Start RealHarware Joint State Publisher Client
-  start_pf400_description_client = Node(
+  start_hidex_description_client = Node(
     condition=UnlessCondition(fake_hardware),
-    package = "pf400_description",
-    executable = 'pf400_description_client',
-    name = 'PF400DescriptionNode',
+    package = "hidex_description",
+    executable = 'hidex_description_client',
+    name = 'HidexDescriptionNode',
     output = 'screen'
   )
    
@@ -101,6 +101,6 @@ def generate_launch_description():
   ld.add_action(start_joint_state_publisher_fake_hardware_node)
   ld.add_action(start_robot_state_publisher_cmd)
   ld.add_action(start_rviz_cmd)
-  ld.add_action(start_pf400_description_client)
+  ld.add_action(start_hidex_description_client)
  
   return ld
