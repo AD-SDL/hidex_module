@@ -13,7 +13,7 @@ from std_srvs.srv import Empty
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 
-from hidex_driver.hidex_driver import hidex_reader
+# from hidex_driver.hidex_driver import hidex_reader # UNCOMMENT WHEN IT IS READY
 
 class HidexDescriptionClient(Node):
 
