@@ -2,10 +2,10 @@
 <robot name="Hidex_Robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
  <!-- Materials -->
-  <xacro:include filename="$(find azenta_description)/urdf/materials.xacro" />
+  <xacro:include filename="$(find hidex_description)/urdf/materials.xacro" />
   
   <!-- Module Carts -->
-  <xacro:include filename="$(find azenta_description)/urdf/module_carts.urdf.xacro" />
+  <xacro:include filename="$(find hidex_description)/urdf/module_carts.urdf.xacro" />
   <xacro:Module_Carts prefix="module_carts/"/>
 
   <!-- Sealer -->
