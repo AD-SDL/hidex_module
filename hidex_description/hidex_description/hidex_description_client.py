@@ -49,7 +49,7 @@ class HidexDescriptionClient(Node):
     def joint_state_publisher_callback(self):
         
         # joint_states = self.hidex.refresh_joint_state() #TODO:USE THIS WHEN IT IS READY
-        joint_states = [0]
+        joint_states = [0.0]
         hidex_joint_msg = JointState()
         hidex_joint_msg.header = Header()
         hidex_joint_msg.header.stamp = self.get_clock().now().to_msg()
