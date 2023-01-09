@@ -13,7 +13,7 @@ def generate_launch_description():
 
   pkg_share = FindPackageShare(package='hidex_description').find('hidex_description')
   default_rviz_config_path = os.path.join(pkg_share, 'config/hidex_rviz_config.rviz')
-  default_urdf_model_path = os.path.join(pkg_share, 'urdf/hidex_robot.xacro') 
+  default_urdf_model_path = os.path.join(pkg_share, 'urdf/hidex_module.xacro') 
  
   fake_hardware = LaunchConfiguration('fake_hardware')
   urdf_model = LaunchConfiguration('urdf_model')
