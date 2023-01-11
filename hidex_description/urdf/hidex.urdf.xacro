@@ -4,7 +4,7 @@
 
   <!-- Links -->
   <xacro:macro name="Hidex" params = "prefix">
-    <link name="${prefix}hidex_body">
+  <link name="${prefix}hidex_body">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
