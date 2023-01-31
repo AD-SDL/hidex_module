@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../../../wei_ws/src"
+		},
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"python.formatting.provider": "black"
+	}
+}
