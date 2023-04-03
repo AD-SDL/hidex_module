@@ -43,8 +43,14 @@ def hidexOpenClose():
     except Exception as error_msg:
         print(error_msg)
 
-    # move mouse over import assay template button
+    # click open/close door button
     ahk.mouse_move(2470, 81)
+    ahk.click()
+
+    # return to main assay screen once complete 
+    print("Action complete: returning to main assay screen")
+    time.sleep(.5)
+    ahk.mouse_move(36,168)
     ahk.click()
 
     # minimize the hidex app after protcol complete
