@@ -23,22 +23,17 @@ def soloRun(solo_hso_path):
         # press enter twice to bypass login screen 
         ahk.key_press("Enter")
         ahk.key_press("Enter")
-
         
         try: 
             # capture the active window
             soloSoft_window = ahk.win_get(title="C:\Program Files (x86)\Hudson Robotics\SoloSoft\SOLOSoft")
+            print("window = " + str(soloSoft_window))
 
             # make the window full screen
             soloSoft_window.maximize()
 
-            # press 'File' 
-            ahk.mouse_move(14,32)
-            ahk.click()
-            
-            # press 'Open'
-            ahk.mouse_move(25,76)
-            ahk.click()
+            # press 'Open File' button
+            ahk.click(34,57)   # old HDMI coordinates: File = (14,32), Open = (25,76)
 
             # insert path of hso protocol 
             time.sleep(3)
@@ -49,13 +44,13 @@ def soloRun(solo_hso_path):
 
             # press run button then "Enter" to bypass the "Are you sure?" screen
             time.sleep(.5)
-            ahk.mouse_move(193,59)
+            ahk.mouse_move(195,59) #(193,59) old HDMI coordinates
             ahk.click()
             time.sleep(.5)
             ahk.key_press("Enter")
             
 
-            # ---- SOLO program is now running! --------------
+    #         # ---- SOLO program is now running! --------------
 
             # monitor for "Running Method..." or "Run Stopped" windows
             time.sleep(.5)
@@ -98,9 +93,9 @@ def soloRun(solo_hso_path):
             print(error_msg)
             
 
-    else:
-        print("SOLOSoft.exe is already running. Please shutdown and try again")
-        # TODO: could shut down SOLOSoft here but might not be a good idea if something important is already running
+    # else:
+    #     print("SOLOSoft.exe is already running. Please shutdown and try again")
+    #     # TODO: could shut down SOLOSoft here but might not be a good idea if something important is already running
 
 
 # Helper methods ------------------------------------------------------------------

@@ -15,7 +15,8 @@ def hidexRun(protocol_path):
     os.system('start C:\hidex\PlateReaderSoftware_Automation_1.3.1-rc\PlateReaderSoftware.exe') 
     time.sleep(5) # wait for window to open fully
 
-    if ahk.pixel_get_color(2495,75) != '0xFFFFFF':
+    #if ahk.pixel_get_color(2495,75) != '0xFFFFFF':  # old HDMI coordinates
+    if ahk.pixel_get_color(1824,76) != '0xFFFFFF':
 
         try:  
             # try to find the pop up window
@@ -27,7 +28,8 @@ def hidexRun(protocol_path):
                 pre_release_pop_up.close()
 
                 # wait for Hidex to initialize
-                while ahk.pixel_get_color(2495,75) != '0xFFFFFF':
+                #while ahk.pixel_get_color(2495,75) != '0xFFFFFF':  # old HDMI coordinates
+                while ahk.pixel_get_color(1824,76) != '0xFFFFFF':
                     print("Waiting for hidex to initialize") 
                     time.sleep(1)
                 time.sleep(.5)
@@ -36,9 +38,9 @@ def hidexRun(protocol_path):
             print("No initial pop up window found")
 
     # move mouse over import assay template button
-    ahk.mouse_move(2085, 329)
-    ahk.click()
-
+    # ahk.mouse_move(2085, 329)  # old HDMI coordinates
+    # ahk.click()
+    ahk.click(1765,318)
     time.sleep(1)
    
     try: 
@@ -55,20 +57,23 @@ def hidexRun(protocol_path):
         print(error_msg)
 
     # run the imported protocol template file
-    ahk.mouse_move(2170,1354)
-    ahk.click()
+    # ahk.mouse_move(2170,1354)  # old HDMI coordinates
+    # ahk.click()
+    ahk.click(1700,990)
 
     # wait for the protocol to finish
-    while (ahk.pixel_get_color(2324,1362)) == '0x000000': 
+    #while (ahk.pixel_get_color(2324,1362)) == '0x000000': 
+    while (ahk.pixel_get_color(1700,990)) == '0x000000':
         print("Hidex protocol is still running")
-        print(ahk.pixel_get_color(2324,1362))
+        print(ahk.pixel_get_color(1700,990))
         time.sleep(1)
     
     # return to main assay screen once complete 
     print("Hidex protocol complete, returning to main assay screen")
     time.sleep(.5)
-    ahk.mouse_move(36,168)
-    ahk.click()
+    # ahk.mouse_move(36,168)  # old HDMI coordinates
+    # ahk.click()
+    ahk.click(36,168)
 
     # minimize the hidex app after protcol complete
     time.sleep(.5) # not necessary, but for demo
