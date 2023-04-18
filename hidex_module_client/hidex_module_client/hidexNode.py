@@ -1,17 +1,11 @@
 #! /usr/bin/env python3
 
-import rclpy                 # import Rospy
-from rclpy.node import Node  # import Rospy Node
-from std_msgs.msg import String
-
-from wei_services.srv import WeiDescription 
-from wei_services.srv import WeiActions   
 
 from time import sleep
 
 from hidex_driver.hidex_driver import hidex_reader
 
-class hidexNode(Node):
+class hidexNode():
     '''
     The hidexNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
     based on the executed command and publishes the state of the hidex and a description of the hidex to the respective topics.
