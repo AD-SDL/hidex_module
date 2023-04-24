@@ -8,7 +8,8 @@ from ahk.window import Window
 
 def hidexOpenClose(): 
     """AHK script to open or close the Hidex drawer. NOTE: always start any protocol without the Hidex app open"""
- 
+    
+    is_complete = False
     ahk = AHK()
     
     # TODO: could check system to see if Hidex program is already running
@@ -57,4 +58,8 @@ def hidexOpenClose():
     main_hidex_window = Window.from_mouse_position(ahk)
     main_hidex_window.minimize()
 
-hidexOpenClose()
+    is_complete = True 
+    print("hidex opened/closed, returning True")
+
+    return is_complete
+

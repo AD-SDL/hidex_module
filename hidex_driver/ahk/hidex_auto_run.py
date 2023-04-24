@@ -9,6 +9,7 @@ from ahk.window import Window
 # Python script to run a Hidex protocol
 def hidexRun(protocol_path): 
 
+    is_complete = False
     ahk = AHK()
     
     # open the Hidex app
@@ -79,5 +80,11 @@ def hidexRun(protocol_path):
     time.sleep(.5) # not necessary, but for demo
     main_hidex_window = Window.from_mouse_position(ahk)
     main_hidex_window.minimize()
+    
+    # TODO: return the name of the data file that was created
+    is_complete = True
+    print("Returning True: hidex run completed")
 
-hidexRun("C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate")
+    return is_complete
+
+#hidexRun("C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate")
