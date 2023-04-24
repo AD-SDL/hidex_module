@@ -13,14 +13,21 @@ def send_instructions(tcp_address='hudson01.cels.anl.gov',tcp_port='5556'):
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://"+tcp_address+":"+tcp_port)
     
+    # run hidex protocol 
+    # msg = {
+    #     "action_handle": "run_protocol",
+    #     "action_vars": "C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate",
+    # }   
+
+    # open or close
     msg = {
-        "action_handle": "run_protocol",
-        "action_vars": "/home/rpl/workspace/rpl_workcell/pcr_workcell/protocol_files/solo_beta_test_first.yaml",
-    }
+        "action_handle": "close",
+        "action_vars": "C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate",
+    } 
     # msg = 'SHUTDOWN'
     # Send message to queue
     socket.send_string(str(msg))
-    print("Message sent to tcp_port " + tcp_port+" on "+tcp_address)
+    print("Message sent to tcp_port " + tcp_port +" on " + tcp_address)
     
     # Wait for reply and 
     repl = socket.recv()
