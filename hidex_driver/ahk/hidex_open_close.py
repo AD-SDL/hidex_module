@@ -17,7 +17,7 @@ def hidexOpenClose():
     os.system('start C:\hidex\PlateReaderSoftware_Automation_1.3.1-rc\PlateReaderSoftware.exe') 
     time.sleep(5) # wait for window to open fully
     
-    if ahk.pixel_get_color(1824,76) != '0xFFFFFF':  # (2495,75) old HDMI coordinate
+    if ahk.pixel_get_color(1824,76) != '0xFFFFFF':  
 
         try:  
             # try to find the pop up window
@@ -28,7 +28,7 @@ def hidexOpenClose():
                 pre_release_pop_up.close()
 
                 # wait for Hidex to initialize
-                while ahk.pixel_get_color(1824,76) != '0xFFFFFF':  # (2495,75) old HDMI coordinates
+                while ahk.pixel_get_color(1824,76) != '0xFFFFFF': 
                     print("Waiting for hidex to initialize") 
                     time.sleep(1)
                 time.sleep(.5)
@@ -44,17 +44,15 @@ def hidexOpenClose():
         print(error_msg)
 
     # click open/close door button
-
-    ahk.click(1824,76)  # (2470, 81) old HDMI coordinates
+    ahk.click(1824,76) 
 
     # return to main assay screen once complete 
     print("Action complete: returning to main assay screen")
     time.sleep(.5)
-    ahk.click(36,168)  # (36,168)  # old HDMI coordinates
-
+    ahk.click(36,168) 
 
     # minimize the hidex app after protcol complete
-    time.sleep(.5) # not necessary, but for demo
+    time.sleep(.5) 
     main_hidex_window = Window.from_mouse_position(ahk)
     main_hidex_window.minimize()
 

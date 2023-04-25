@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+from datetime import datetime
 
 from ahk import AHK
 from ahk.window import Window
@@ -16,12 +17,10 @@ def hidexRun(protocol_path):
     os.system('start C:\hidex\PlateReaderSoftware_Automation_1.3.1-rc\PlateReaderSoftware.exe') 
     time.sleep(5) # wait for window to open fully
 
-    #if ahk.pixel_get_color(2495,75) != '0xFFFFFF':  # old HDMI coordinates
     if ahk.pixel_get_color(1824,76) != '0xFFFFFF':
 
         try:  
             # try to find the pop up window
-            #pre_release_pop_up = ahk.win_wait(title=b'Internal pre-release version', timeout=5) # DOESN'T WORK
             pre_release_pop_up = ahk.find_window(title=b'Internal pre-release version')
 
             # close the pop up if found
@@ -29,18 +28,16 @@ def hidexRun(protocol_path):
                 pre_release_pop_up.close()
 
                 # wait for Hidex to initialize
-                #while ahk.pixel_get_color(2495,75) != '0xFFFFFF':  # old HDMI coordinates
                 while ahk.pixel_get_color(1824,76) != '0xFFFFFF':
-                    print("Waiting for hidex to initialize") 
+                    print(f"({datetime.now()})  AHK: Waiting for hidex to initialize") 
                     time.sleep(1)
                 time.sleep(.5)
 
         except Exception as error_msg: 
-            print("No initial pop up window found")
+            print(f"({datetime.now()}) AHK ERROR: hidexRun unable to close initial pop up window")
+            print(error_msg)
 
     # move mouse over import assay template button
-    # ahk.mouse_move(2085, 329)  # old HDMI coordinates
-    # ahk.click()
     ahk.click(1765,318)
     time.sleep(1)
    
@@ -58,33 +55,33 @@ def hidexRun(protocol_path):
         print(error_msg)
 
     # run the imported protocol template file
-    # ahk.mouse_move(2170,1354)  # old HDMI coordinates
-    # ahk.click()
     ahk.click(1700,990)
 
     # wait for the protocol to finish
-    #while (ahk.pixel_get_color(2324,1362)) == '0x000000': 
-    while (ahk.pixel_get_color(1700,990)) == '0x000000':
-        print("Hidex protocol is still running")
-        print(ahk.pixel_get_color(1700,990))
+    while (ahk.pixel_get_color(1700,990)) == '0x000000':  # check that run now button pixels are black (green when run complete)
+        print(f"({datetime.now()}) AHK: Hidex protocol is still running")
         time.sleep(1)
     
     # return to main assay screen once complete 
-    print("Hidex protocol complete, returning to main assay screen")
+    print(f"({datetime.now()}) AHK: Hidex protocol complete, returning to main assay screen")
     time.sleep(.5)
-    # ahk.mouse_move(36,168)  # old HDMI coordinates
-    # ahk.click()
     ahk.click(36,168)
 
     # minimize the hidex app after protcol complete
-    time.sleep(.5) # not necessary, but for demo
+    time.sleep(.5) 
     main_hidex_window = Window.from_mouse_position(ahk)
     main_hidex_window.minimize()
     
     # TODO: return the name of the data file that was created
     is_complete = True
-    print("Returning True: hidex run completed")
+    print(f"({datetime.now()}) AHK: Returning True, hidex run completed")
 
     return is_complete
-
+    # TODO: also return every message in one single string
+    # TODO: action response  = 0 or 1
+    # return_dict = {
+    #     'action_response': is_complete, #int16 --> 1 if complete and some other number if an error maybe
+    #     'action_msg': something_meaninful, (filename of new data)
+    #     'action_log': string_of_logs
+    # }
 #hidexRun("C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate")
