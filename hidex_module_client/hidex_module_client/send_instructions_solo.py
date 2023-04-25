@@ -6,25 +6,22 @@ import os
 import sys
 
 
-def send_instructions(tcp_address='hudson01.cels.anl.gov',tcp_port='5556'):
+def send_instructions(tcp_address='hudson01.cels.anl.gov',tcp_port='5557'):
 
     # * connect to tcp_port on hudson01
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://"+tcp_address+":"+tcp_port)
-    
-    # run hidex protocol 
+ 
+    # # run solo protocol 
     # msg = {
     #     "action_handle": "run_protocol",
-    #     "action_vars": "C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate",
+    #     "action_vars": "C:\\Users\\svcaibio\\Dev\\hidex_module\\hidex_driver\\ahk\\test_hso\\test.hso",
     # }   
 
-    # open or close
-    msg = {
-        "action_handle": "close",
-        "action_vars": "C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate",
-    } 
-    # msg = 'SHUTDOWN'
+    # shutdown hudson01 solo listener 
+    msg = 'SHUTDOWN'
+    
     # Send message to queue
     socket.send_string(str(msg))
     print("Message sent to tcp_port " + tcp_port +" on " + tcp_address)
