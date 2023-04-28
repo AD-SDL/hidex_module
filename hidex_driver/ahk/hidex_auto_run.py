@@ -2,6 +2,7 @@ import sys
 import os
 import time
 from datetime import datetime
+import shutil
 
 from ahk import AHK
 from ahk.window import Window
@@ -10,7 +11,12 @@ from ahk.window import Window
 # Python script to run a Hidex protocol
 def hidexRun(protocol_path): 
 
+    # capture contents of hidex data folder before run
+    before_run__data_contents = list_data_files() 
     is_complete = False
+    action_log = ""
+
+    # run the Hidex Protocol with AHK python script ------------------------
     ahk = AHK()
     
     # open the Hidex app
@@ -72,7 +78,43 @@ def hidexRun(protocol_path):
     main_hidex_window = Window.from_mouse_position(ahk)
     main_hidex_window.minimize()
     
-    # TODO: return the name of the data file that was created
+    # end of ahk python actions -----------------------------------------
+    
+    
+    # capture contents of hidex data folder after the run 
+    after_run_data_contents = list_data_files()
+
+    # find data file added from this run 
+    new_data_files = [f for f in after_run_data_contents if f not in before_run__data_contents]
+
+    # make sure one data file captured, not > 1 or 0
+    if len(new_data_files) == 1: 
+        
+        # TESTING
+        print("one data file found")
+        print(new_data_files) 
+
+        new_data_path = new_data_files[0]
+        
+        action_response = 0
+        action_msg = new_data_files[0]
+
+    else: 
+        
+        # TESTING
+        print("more than one data file found!")
+        print(new_data_files)
+        action_response = -1
+        action_msg = new_data_files
+        
+
+#   # format return dict 
+#     return_dict = {
+#         'action_response': action_response,
+#         'action_msg': action_msg,
+#             'action_log': action_log,
+#         }  
+
     is_complete = True
     print(f"({datetime.now()}) AHK: Returning True, hidex run completed")
 
@@ -85,3 +127,50 @@ def hidexRun(protocol_path):
     #     'action_log': string_of_logs
     # }
 #hidexRun("C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign1_noIncubate2.sensetemplate")
+
+
+# HELPER METHODS -----------------------------------------------
+def list_data_files(hidex_data_folder = "C://labautomation//data_wei//one_file") -> list: 
+
+    try: 
+        # check that directory exists
+        assert os.path.isdir(hidex_data_folder)
+
+        current_data_files = [f for f in os.listdir(hidex_data_folder) if not os.path.isdir(f)]
+        
+        return current_data_files
+
+    except AssertionError as assertion_error_msg: 
+        print("ERROR: Hidex data folder on hudson01 cannot be found")
+        print(assertion_error_msg)
+
+    except Exception as error_msg: 
+        print("ERROR: Cannot return files from hidex data folder")
+        print(error_msg)
+
+
+def archive_data(new_file_path, archive_folder = "C:\\labautomation\\data_wei\\proc") -> str:
+    
+    try: 
+        file_name = os.path.basename(new_file_path)
+
+        if os.isdir(archive_folder):
+            archive_path = os.path.join(archive_folder, new_file_path)
+
+            shutil.move(new_file_path, archive_path)
+            
+            # TESTING
+            print("file has been moved!")
+
+            return archive_path
+
+        else: 
+            print("ERROR: proc folder does not exist, cannot return new data file path")
+            return None
+
+    except Exception as error_msg: 
+        print(error_msg)
+
+        
+    
+
