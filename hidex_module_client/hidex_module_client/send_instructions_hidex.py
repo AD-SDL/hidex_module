@@ -28,7 +28,9 @@ def send_instructions(tcp_address='hudson01.cels.anl.gov',tcp_port='5556'):
     # run hidex protocol 
     msg = {
         "action_handle": "run_protocol",
-        "action_vars": "C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign2_wei.sensetemplate",
+        "action_vars": {
+            "protocol_path":"C:\\Users\\svcaibio\\Documents\\Hidex Sense\\Campaign2_wei.sensetemplate",
+        }
     }   
 
     # shutdown hudson01 hidex listener 
