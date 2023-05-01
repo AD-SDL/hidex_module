@@ -11,9 +11,11 @@ from ahk.window import Window
 # Python script to run a Hidex protocol
 def hidexRun(protocol_path): 
 
-    # capture contents of hidex data folder before run
-    before_run__data_contents = list_data_files() 
     action_log = ""
+
+    # capture contents of hidex data folder before run
+    before_run__data_contents, list_log = list_data_files() 
+    action_log += list_log
 
     # run Hidex protocol in app with ahk python script 
     ahk_complete, ahk_log = run_protocol_ahk(protocol_path)
@@ -21,16 +23,24 @@ def hidexRun(protocol_path):
 
     if ahk_complete == True: 
         # capture contents of hidex data folder after the run 
-        after_run_data_contents = list_data_files()
+        after_run_data_contents, list_log = list_data_files()
+        action_log += list_log
+
+        # TESTING 
+        print(f"AFTER RUN DATA CONTENTS: {after_run_data_contents}")
 
         # find data file added from this run 
         new_data_files = [f for f in after_run_data_contents if f not in before_run__data_contents]
+
+        # TESTING
+        print(f"NEW FILE(s) FOUND: {new_data_files}")
 
         # ensure only one new data file found
         if len(new_data_files) == 1:  
 
             # move the file to proc folder 
-            relocated_data_path = archive_data(new_data_files[0])
+            relocated_data_path, archive_log = archive_data(new_data_files[0])
+            action_log += archive_log
 
             # format response message variables
             action_response = 0
@@ -148,46 +158,53 @@ def run_protocol_ahk(protocol):
     
 
 
-def list_data_files(hidex_data_folder = "C://labautomation//data_wei//one_file") -> list: 
+def list_data_files(hidex_data_folder = "C:\\labautomation\\data_wei\\one_file") -> list: 
+
+    list_log = ""
+    current_data_files = []
 
     try: 
         # check that directory exists
         assert os.path.isdir(hidex_data_folder)
 
-        current_data_files = [f for f in os.listdir(hidex_data_folder) if not os.path.isdir(f)]
-        
-        return current_data_files
+        current_data_files = [os.path.abspath(os.path.join(hidex_data_folder,f)) for f in os.listdir(hidex_data_folder) if not os.path.isdir(f)]
 
     except AssertionError as assertion_error_msg: 
-        print("ERROR: Hidex data folder on hudson01 cannot be found")
-        print(assertion_error_msg)
+        list_log += (f"({datetime.now()}) ERROR: Hidex data folder on hudson01 cannot be found\n")
+        list_log += (f"({datetime.now()}) {assertion_error_msg}\n")
 
     except Exception as error_msg: 
-        print("ERROR: Cannot return files from hidex data folder")
-        print(error_msg)
+        list_log += (f"({datetime.now()}) ERROR: Cannot return files from hidex data folder\n")
+        list_log += (f"({datetime.now()}) {error_msg}\n")
+
+    return current_data_files, list_log
+
 
 
 def archive_data(new_file_path, archive_folder = "C:\\labautomation\\data_wei\\proc") -> str:
+
+    archive_log = ""
+    archive_path = None
     
     try: 
         file_name = os.path.basename(new_file_path)
 
-        if os.isdir(archive_folder):
+        if os.path.isdir(archive_folder):
+
+            # format new path in proc folder
             archive_path = os.path.join(archive_folder, file_name)
 
+            # move file to new location
             shutil.move(new_file_path, archive_path)
-            
-            # TESTING
-            print("file has been moved!")
-
-            return archive_path
 
         else: 
-            print("ERROR: proc folder does not exist, cannot return new data file path")
-            return None
+            archive_log += (f"({datetime.now()}) ERROR: proc folder does not exist, cannot return new data file path\n")
 
     except Exception as error_msg: 
-        print(error_msg)
+        archive_log += (f"({datetime.now()} {error_msg}\n")
+        
+    return archive_path, archive_log
+    
 
         
     
