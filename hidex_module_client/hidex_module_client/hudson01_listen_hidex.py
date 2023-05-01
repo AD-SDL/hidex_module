@@ -53,21 +53,17 @@ while True:
             
             try: 
                 # check that action_vars is a string filename and that it exists
-                if isinstance(action_vars, str) and os.path.exists(action_vars): 
-                    is_complete = hidex_auto_run.hidexRun(action_vars)
-                    if is_complete == True:
-                        response = "Hidex protocol complete"
-                    else: 
-                        response = "ERROR: Hidex ahk did not complete"
+                if isinstance(action_vars['protocol_path'], str) and os.path.exists(action_vars['protocol_path']): 
+                    # TESTING 
+                    print(action_vars['protocol_path'])
+                    return_dict = hidex_auto_run.hidexRun(action_vars['protocol_path'])
+                    response = str(return_dict)  # this is the right form
 
             except Exception as error_msg: 
                 print(error_msg)
                 response = "ERROR: Hidex client could not run ahk"
-
-        # TODO: scan data folder for new hidex data file and return path - YES! 
         
-        socket.send(bytes(response, encoding='utf-8'))
-        # TODO: format response dictionary -> response = dictionary 
+        socket.send(bytes(response, encoding='utf-8')) 
 
         
 socket.close()
