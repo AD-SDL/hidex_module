@@ -16,13 +16,13 @@ def send_instructions(tcp_address='hudson01.cels.anl.gov',tcp_port='5556'):
     # # open hidex
     # msg = {
     #     "action_handle": "open",
-    #     "action_vars": "",
+    #     "action_vars": {},
     # } 
 
     # # close hidex 
     # msg = {
     #     "action_handle": "close",
-    #     "action_vars": "",
+    #     "action_vars": {},
     # } 
  
     # run hidex protocol 
