@@ -39,9 +39,11 @@ while True:
                 if action_handle=="run_protocol": 
 
                     try: 
+                        # TODO: check that action vars is a dictionary and has entry for protocol path (overkill?)
+
                         # check that protocol file path exists
-                        if isinstance(action_vars, str) and os.path.exists(action_vars): 
-                            return_dict = solo_auto_run.soloRun(action_vars)
+                        if isinstance(action_vars['protocol_path'], str) and os.path.exists(action_vars['protocol_path']): 
+                            return_dict = solo_auto_run.soloRun(action_vars['protocol_path'])
                             return_dict['action_log'] += (f"{datetime.now()} LISTEN SOLO: SOLO Run Protocol Complete\n")
 
                         else: 
