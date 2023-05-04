@@ -26,14 +26,8 @@ def hidexRun(protocol_path):
         after_run_data_contents, list_log = list_data_files()
         action_log += list_log
 
-        # TESTING 
-        print(f"AFTER RUN DATA CONTENTS: {after_run_data_contents}")
-
         # find data file added from this run 
         new_data_files = [f for f in after_run_data_contents if f not in before_run__data_contents]
-
-        # TESTING
-        print(f"NEW FILE(s) FOUND: {new_data_files}")
 
         # ensure only one new data file found
         if len(new_data_files) == 1:  
@@ -50,8 +44,6 @@ def hidexRun(protocol_path):
             action_log += (f"({datetime.now()}) CLIENT: one new hidex data file found, {relocated_data_path}\n")
 
         else: # if there are 0 or more than one new data file
-
-            # TODO: pick the most recent file here? means something went wrong before this run
             
             #  format response message variables
             action_response = -1

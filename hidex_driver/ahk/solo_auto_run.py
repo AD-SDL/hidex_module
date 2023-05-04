@@ -66,12 +66,6 @@ def soloRun(solo_hso_path):
                         run_stopped_window = ahk.find_window(title=b'SOLOSoft',text=b'OK\r\nRun Stopped.\r\n')
                         still_running_window = ahk.find_window(title=b"Running Method...")
 
-                        # TESTING - can be removed later
-                        action_log += (f"({datetime.now()}) Run completed: {str(True if run_completed_window else False)}\n")
-                        action_log += (f"({datetime.now()}) Run stopped: {str(True if run_stopped_window else False)}\n")
-                        action_log += (f"({datetime.now()}) Still running: {str(True if still_running_window else False)}\n")
-                        action_log += (f"({datetime.now()}) ----------------------------\n")
-
                         # check for one of the following states
                         if still_running_window and not (run_stopped_window or run_completed_window): 
                             # solo protocol is still running
@@ -107,6 +101,8 @@ def soloRun(solo_hso_path):
                                 # could not locate and kill the SOLOSoft.exe
                                 action_response = -1
                                 action_log += (f"({datetime.now()}) ERROR SOLO AHK: SOLO run complete but could not locate and close SOLOSoft.exe.\n{error_msg}\n")
+
+                            break # exit the while True loop
                             
                         else:  
                             # some other intermediate run status hit TODO: what would this be?/how to handle
@@ -138,9 +134,7 @@ def soloRun(solo_hso_path):
             'action_msg': action_msg,
             'action_log': action_log
         }
-
         return return_dict
-
 
 
 # Helper methods ------------------------------------------------------------------
@@ -151,6 +145,3 @@ def solo_already_running() -> bool:
         if process.Name == "SOLOSoft.exe":
             is_already_running = True 
     return is_already_running
-
-
-# soloRun("C:\\Users\\svcaibio\\Dev\\hidex_module\\hidex_driver\\ahk\\test_hso\\test.hso")
