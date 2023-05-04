@@ -1,6 +1,6 @@
 import os
 import sys
-import zmq
+import socket
 from datetime import datetime
 
 # TODO: find a better way to access the driver functions
@@ -8,87 +8,81 @@ from datetime import datetime
 sys.path.append('C:\\Users\\svcaibio\\Dev\\hidex_module')
 from hidex_driver.ahk import solo_auto_run
 
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://*:5557")
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_address = (socket.gethostname(),5557)
+sock.bind(server_address)
+sock.listen(1) # listen for one connection at at time
 print("hudson01 listening on port 5557")
 
+
 while True:
-    message = socket.recv()
-    response = ""
-    if message == b"SHUTDOWN":
-        socket.send(b"Shutting down")
-        break
-    else:
-        msg = eval(message.decode("utf-8"))
+    connection, client_address = sock.accept()
 
-        #check if msg is dictionary
-        action_handle = msg['action_handle'] 
-        action_vars = msg['action_vars']
+    try: 
+        message = connection.recv(4096)
+        print(f"Received: {message}")
 
-        if action_handle=="run_protocol": 
+        response = ""
 
-            try: 
-                # check that protocol file path exists
-                if isinstance(action_vars, str) and os.path.exists(action_vars): 
-                    is_complete = solo_auto_run.soloRun(action_vars)
-                    print(is_complete) # TESTING
-                    if is_complete == True:
-                        response = "SOLO protocol complete"
-                    else: 
-                        response = "ERROR: SOLO ahk did not complete"
+        if message == b"SHUTDOWN":
+            connection.sendall(b"Shutting down")
+            break
 
-                else: 
-                    print(f"({datetime.now()}) ERROR: SOLO protocol file path cannot be located or has incorrect formatting (action_vars must be a string)")
+        else:
+            msg = eval(message.decode("utf-8"))
+
+            try: # msg is formatted correctly, will hit except if msg is not dictionary
+
+                action_handle = msg['action_handle'] 
+                action_vars = msg['action_vars']
+
+                if action_handle=="run_protocol": 
+
+                    try: 
+                        # check that protocol file path exists
+                        if isinstance(action_vars, str) and os.path.exists(action_vars): 
+                            return_dict = solo_auto_run.soloRun(action_vars)
+                            return_dict['action_log'] += (f"{datetime.now()} LISTEN SOLO: SOLO Run Protocol Complete\n")
+
+                        else: 
+                            return_dict = {
+                                'action_response': -1,
+                                'action_log': (f"{datetime.now()} ERROR LISTEN SOLO: SOLO protocol path cannot be located or has incorrect formatting (action_vars must be a string)\n{error_msg}\n")
+                            }
+
+                    except Exception as error_msg: 
+                        return_dict = {
+                            'action_response': -1,
+                            'action_log': (f"{datetime.now()} ERROR LISTEN SOLO: SOLO client could not run ahk\n{error_msg}\n")
+                        }
                 
-            except Exception as error_msg: 
-                print(error_msg)
-                response = "ERROR: SOLO client could not run ahk"
-           
+                else:  # action_handle is not recognized
+                    return_dict = {
+                        'action_response': -1,
+                        'action_log': (f"{datetime.now()} ERROR LISTEN SOLO: message action_handle is not recognized\n{error_msg}\n")
+                    }
 
-        # # drawer control actions
-        # if action_handle=="open": 
-        #     print('opening hidex drawer')
-        #     try: 
-        #         is_complete = hidex_open_close.hidexOpenClose()
-        #         if is_complete == True: 
-        #             response = "Hidex opened"
-        #         else: 
-        #             response = "ERROR: Hidex ahk unable to open drawer"
-        #     except Exception as error_msg: 
-        #         print("ERROR: Hidex client unable to run open_close.ahk")
+            except Exception as error_msg: # message is not formatted correctly, could not read action_msg
+                return_dict = {
+                    'action_response': -1,
+                    'action_log': (f"{datetime.now()} ERROR LISTEN SOLO: Message received was not formatted correctly. Could not parse action_handle.\n{error_msg}\n")
+                }
 
-        # elif action_handle=="close": 
-        #     print('closing hidex drawer')
-        #     try: 
-        #         is_complete = hidex_open_close.hidexOpenClose()
-        #         if is_complete == True: 
-        #             response = "Hidex closed"
-        #         else: 
-        #             response = "ERROR: Hidex ahk unable to close drawer"
-        #     except Exception as error_msg: 
-        #         print("ERROR: Hidex client unable to run open_close.ahk")
+    except Exception as error_msg: # message could not be received from connection
+        return_dict = {
+            'action_response': -1,
+            'action_log': (f"{datetime.now()} ERROR LISTEN SOLO: Message could not be received.\n{error_msg}\n")
+        }
 
-        # # protocol handling actions
-        # if action_handle=='run_protocol':
-        #     print('running hidex')
+    finally: 
+        response = str(return_dict)
+        connection.sendall(bytes(response, encoding='utf-8'))
+        connection.close()
+
+sock.close()
+
+
+
             
-        #     try: 
-        #         # check that action_vars is a string filename and that it exists
-        #         if isinstance(action_vars, str) and os.path.exists(action_vars): 
-        #             is_complete = hidex_auto_run.hidexRun(action_vars)
-        #             print(is_complete)
-        #             if is_complete == True:
-        #                 response = "Hidex protocol complete"
-        #             else: 
-        #                 response = "ERROR: Hidex ahk did not complete"
 
-        #     except Exception as error_msg: 
-        #         print(error_msg)
-        #         response = "ERROR: Hidex client could not run ahk"
-
-        # # TODO: scan data folder for new hidex data file and return path?
-        
-        socket.send(bytes(response, encoding='utf-8'))
-        
-socket.close()
+       
