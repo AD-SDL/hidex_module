@@ -95,6 +95,7 @@ def soloRun(solo_hso_path):
                                     action_log += (f"({datetime.now()}) Action Complete: SOLO Run Program\n")
 
                                     killed_SOLOSoft = True
+                                    time.sleep(3)  # wait for killing of program to register
                                     break  
                                 
                             if killed_SOLOSoft == False: 
@@ -121,7 +122,7 @@ def soloRun(solo_hso_path):
 
         else:
             action_response = -1 
-            action_log += (f"({datetime.now()}) ERROR SOLO AHK: SOLOSoft.exe is already running. Please shutdown and try again.\n{error_msg}\n")
+            action_log += (f"({datetime.now()}) ERROR SOLO AHK: SOLOSoft.exe is already running. Please shutdown and try again.\n")
 
     except Exception as error_msg: 
         action_response = -1 
