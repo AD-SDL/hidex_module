@@ -19,7 +19,7 @@ while True:
     connection, client_address = sock.accept()
 
     try: 
-        message = connection.recv(4096)
+        message = connection.recv(500000000)  #TODO: find a better solution for this
         print(f"Received: {message}")
 
         response = ""
@@ -29,7 +29,7 @@ while True:
             break
 
         else:
-            msg = eval(message.decode("utf-8"))
+            msg = eval(message.decode("utf-8"))  
 
             try: # msg is formatted correctly, will hit except if msg is not dictionary
 
@@ -42,8 +42,8 @@ while True:
                         # TODO: check that action vars is a dictionary and has entry for protocol path (overkill?)
 
                         # check that protocol file path exists
-                        if isinstance(action_vars['protocol_path'], str) and os.path.exists(action_vars['protocol_path']): 
-                            return_dict = solo_auto_run.soloRun(action_vars['protocol_path'])
+                        if isinstance(action_vars['hso_contents'], str) and isinstance(action_vars['hso_num_lines'], int):
+                            return_dict = solo_auto_run.soloRun(action_vars['hso_contents'], action_vars['hso_num_lines'])
                             return_dict['action_log'] += (f"{datetime.now()} LISTEN SOLO: SOLO Run Protocol Complete\n")
 
                         else: 
