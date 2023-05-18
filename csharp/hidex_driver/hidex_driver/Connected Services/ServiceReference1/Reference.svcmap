@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="fe851f97-0e7f-4dfd-82fa-e635fd633d8a" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:8080/HidexSenseAutomation/mex" Protocol="mex" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="HidexSenseAutomation.wsdl" MetadataType="Wsdl" ID="96bb6034-6942-4d9c-91ab-8edc34f5e2f8" SourceId="1" SourceUrl="http://localhost:8080/HidexSenseAutomation/mex" />
+    <MetadataFile FileName="service.wsdl" MetadataType="Wsdl" ID="c035f9f0-3fbf-4842-b9df-f902dd898d5b" SourceId="1" SourceUrl="http://localhost:8080/HidexSenseAutomation/mex" />
+    <MetadataFile FileName="HidexSenseAutomation.xsd" MetadataType="Schema" ID="fe15251e-06c2-417b-9c5a-f486a3af5c0d" SourceId="1" SourceUrl="http://localhost:8080/HidexSenseAutomation/mex" />
+    <MetadataFile FileName="service.xsd" MetadataType="Schema" ID="7b1ed1c5-8d77-4d5c-8537-fa67598a71fa" SourceId="1" SourceUrl="http://localhost:8080/HidexSenseAutomation/mex" />
+    <MetadataFile FileName="Arrays.xsd" MetadataType="Schema" ID="48af42b4-aa66-4a51-bd29-aa817204ff6c" SourceId="1" SourceUrl="http://localhost:8080/HidexSenseAutomation/mex" />
+    <MetadataFile FileName="HidexSense.Automation.xsd" MetadataType="Schema" ID="ed0b7020-b5b8-491a-800f-fe9216ff4dc6" SourceId="1" SourceUrl="http://localhost:8080/HidexSenseAutomation/mex" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>
