@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using Project1.ServiceReference1;
 using System.Net.Sockets;
+using System.Net;
 using Newtonsoft.Json;
+using System.Threading;
 namespace ServiceR
 {
     public class Message
@@ -52,56 +54,105 @@ namespace ServiceR
 
 
 
-                Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                socket.Connect("127.0.0.1", 1003);
-
-                // Send the request.
-                // For the tiny amount of data in this example, the first call to Send() will likely deliver the buffer completely,
-                // however this is not guaranteed to happen for larger real-life buffers.
-                // The best practice is to iterate until all the data is sent.
-
-                // Do minimalistic buffering assuming ASCII response
+                Socket socket;
+                //socket.Connect("127.0.0.1", 1003);
+                Dns.GetHostEntry("146.137.240.22");
+                IPEndPoint T = new IPEndPoint(0, 2000);
+                //socket.Bind(T);
                 byte[] responseBytes = new byte[256];
                 char[] responseChars = new char[256];
                 int c = 0;
                 int bytesReceived = 0;
-                while (true)
+                string Path;
+                byte[] msg;
+                string State;
+                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                socket.Bind(T);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, false);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 500);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 500);
+                while (true) 
                 {
-                    bytesReceived = socket.Receive(responseBytes);
-
-                    // Receiving 0 bytes means EOF has been reached
-                    if (bytesReceived == 0)
-                    {
-                        c = c + 1;
-                        Console.Out.Write("testasdfsf");
-                        break;
-                    }
-                    // Convert byteCount bytes to ASCII characters using the 'responseChars' buffer as destination
-                    int charCount = Encoding.ASCII.GetChars(responseBytes, 0, bytesReceived, responseChars, 0);
-
-                    // Print the contents of the 'responseChars' buffer to Console.Out
-                    Console.Out.Write(responseChars, 0, charCount);
                    
-                    Message m = JsonConvert.DeserializeObject<Message>(new string(responseChars));
-                    Console.Out.Write(m);
-                    Console.Out.Write(m.action_handle);
-                    Console.Out.Write(m.action_handle == "open");
-                    Console.ReadLine();
-                    if (m.action_handle == "open")
-                    {
-                        Console.ReadLine();
-                        client.OpenPlateCarrier();
-                    }
-                    if (m.action_handle == "close")
-                    {
-                        client.ClosePlateCarrier();
-                    }
-                    if (m.action_handle == "end")
-                    {
-                        break;
-                    }
-                }
+                    socket.Listen(1024);
+                    socket = socket.Accept();
+                    // Send the request.
+                    // For the tiny amount of data in this example, the first call to Send() will likely deliver the buffer completely,
+                    // however this is not guaranteed to happen for larger real-life buffers.
+                    // The best practice is to iterate until all the data is sent.
 
+                    // Do minimalistic buffering assuming ASCII response
+                    
+
+                    {
+                        bytesReceived = socket.Receive(responseBytes);
+
+                        // Receiving 0 bytes means EOF has been reached
+                        if (bytesReceived == 0)
+                        {
+
+                            break;
+                        }
+                        // Convert byteCount bytes to ASCII characters using the 'responseChars' buffer as destination
+                        int charCount = Encoding.ASCII.GetChars(responseBytes, 0, bytesReceived, responseChars, 0);
+
+                        // Print the contents of the 'responseChars' buffer to Console.Out
+                        Console.Out.Write(responseChars, 0, charCount);
+
+                        Message m = JsonConvert.DeserializeObject<Message>(new string(responseChars));
+                        Console.Out.Write(m);
+
+                        if (m.action_handle == "open")
+                        {
+                            client.OpenPlateCarrier();
+                            msg = Encoding.UTF8.GetBytes("open");
+                            socket.Send(msg);
+                        }
+                        if (m.action_handle == "run_assay")
+                        {
+                            client.SetAutoExportPath("C:\\Users\\PF400\\Documents\\Hidex_Files");
+                            client.StartAssay(m.action_vars["assay_name"]);
+                            Path = client.GetAutoExportPath();
+                            msg = Encoding.UTF8.GetBytes(Path);
+                            socket.Send(msg);
+                            State = "Busy";
+                            while (client.GetState() == InstrumentState.Busy)
+                            {
+                                State = client.GetState().ToString();
+                                // msg = Encoding.UTF8.GetBytes(State);
+                                //socket.Send(msg);
+                            }
+                            State = client.GetState().ToString();
+                            msg = Encoding.UTF8.GetBytes(State);
+                            socket.Send(msg);
+
+                        }
+                        if (m.action_handle == "close")
+                        {
+                            client.ClosePlateCarrier();
+                            msg = Encoding.UTF8.GetBytes("close");
+                            socket.Send(msg);
+                        }
+
+                        if (m.action_handle == "state")
+                        {
+                            State = client.GetState().ToString();
+                            msg = Encoding.UTF8.GetBytes(State);
+                            socket.Send(msg);
+
+                        }
+                        if (m.action_handle == "end")
+                        {
+
+                            break;
+                        }
+                    }
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Disconnect(true);
+                    //socket.Close();
+                    Thread.Sleep(600);
+                }
 
             }
             catch(Exception e)
