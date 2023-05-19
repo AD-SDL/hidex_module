@@ -55,6 +55,7 @@ namespace ServiceR
 
 
                 Socket socket;
+                Socket socketo;
                 //socket.Connect("127.0.0.1", 1003);
                 Dns.GetHostEntry("146.137.240.22");
                 IPEndPoint T = new IPEndPoint(0, 2000);
@@ -66,24 +67,22 @@ namespace ServiceR
                 string Path;
                 byte[] msg;
                 string State;
-                socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                socket.Bind(T);
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, false);
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 500);
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 500);
+                socketo = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                socketo.Bind(T);
+                Dictionary<string, string> response;
                 while (true) 
                 {
-                   
-                    socket.Listen(1024);
-                    socket = socket.Accept();
+                    socketo.Listen(3000);
+                    socket = socketo.Accept();
+                    
+
                     // Send the request.
                     // For the tiny amount of data in this example, the first call to Send() will likely deliver the buffer completely,
                     // however this is not guaranteed to happen for larger real-life buffers.
                     // The best practice is to iterate until all the data is sent.
 
                     // Do minimalistic buffering assuming ASCII response
-                    
+
 
                     {
                         bytesReceived = socket.Receive(responseBytes);
@@ -106,7 +105,12 @@ namespace ServiceR
                         if (m.action_handle == "open")
                         {
                             client.OpenPlateCarrier();
-                            msg = Encoding.UTF8.GetBytes("open");
+                            response = new Dictionary<string, string>();
+                            response.Add("action_response", "StepStatus.SUCCEEDED");
+                            response.Add("action_msg", "yay");
+                            response.Add("action_log", "birch");
+                            while(client.GetState() != InstrumentState.Idle);
+                            msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                             socket.Send(msg);
                         }
                         if (m.action_handle == "run_assay")
@@ -114,7 +118,11 @@ namespace ServiceR
                             client.SetAutoExportPath("C:\\Users\\PF400\\Documents\\Hidex_Files");
                             client.StartAssay(m.action_vars["assay_name"]);
                             Path = client.GetAutoExportPath();
-                            msg = Encoding.UTF8.GetBytes(Path);
+                            response = new Dictionary<string, string>();
+                            response.Add("action_response", "Success");
+                            response.Add("action_msg", "yay");
+                            response.Add("action_log", "birch");
+                            msg = Encoding.UTF8.GetBytes(response.ToString());
                             socket.Send(msg);
                             State = "Busy";
                             while (client.GetState() == InstrumentState.Busy)
@@ -131,7 +139,13 @@ namespace ServiceR
                         if (m.action_handle == "close")
                         {
                             client.ClosePlateCarrier();
-                            msg = Encoding.UTF8.GetBytes("close");
+                           
+                            response = new Dictionary<string, string>();
+                            response.Add("action_response", "StepStatus.SUCCEEDED");
+                            response.Add("action_msg", "yay");
+                            response.Add("action_log", "birch");
+                            msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+                            while (client.GetState() != InstrumentState.Idle);
                             socket.Send(msg);
                         }
 
@@ -150,7 +164,6 @@ namespace ServiceR
                     }
                     socket.Shutdown(SocketShutdown.Both);
                     socket.Disconnect(true);
-                    //socket.Close();
                     Thread.Sleep(600);
                 }
 
