@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using Project1.ServiceReference1;
 using System.Net.Sockets;
 using System.Net;
@@ -70,9 +71,15 @@ namespace ServiceR
                 socketo = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 socketo.Bind(T);
                 Dictionary<string, string> response;
+                DirectoryInfo dir = new DirectoryInfo("C:\\Users\\PF400\\Documents\\Hidex_Files");
+                string fname;
+                string firstfname;
+                firstfname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
                 while (true) 
                 {
-                    socketo.Listen(3000);
+                    responseBytes = new byte[256];
+                    responseChars = new char[256];
+                    socketo.Listen(10000000);
                     socket = socketo.Accept();
                     
 
@@ -89,7 +96,7 @@ namespace ServiceR
 
                         // Receiving 0 bytes means EOF has been reached
                         if (bytesReceived == 0)
-                        {
+                        {   
 
                             break;
                         }
@@ -98,7 +105,7 @@ namespace ServiceR
 
                         // Print the contents of the 'responseChars' buffer to Console.Out
                         Console.Out.Write(responseChars, 0, charCount);
-
+                        Console.Out.Write(responseChars);
                         Message m = JsonConvert.DeserializeObject<Message>(new string(responseChars));
                         Console.Out.Write(m);
 
@@ -113,50 +120,47 @@ namespace ServiceR
                             msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                             socket.Send(msg);
                         }
-                        if (m.action_handle == "run_assay")
+                        else if (m.action_handle == "run_assay")
                         {
-                            client.SetAutoExportPath("C:\\Users\\PF400\\Documents\\Hidex_Files");
+                            client.SetAutoExportPath("C:/Users/PF400/Documents/Hidex_Files");
                             client.StartAssay(m.action_vars["assay_name"]);
                             Path = client.GetAutoExportPath();
                             response = new Dictionary<string, string>();
-                            response.Add("action_response", "Success");
-                            response.Add("action_msg", "yay");
+                            response.Add("action_response", "StepStatus.SUCCEEDED");
                             response.Add("action_log", "birch");
-                            msg = Encoding.UTF8.GetBytes(response.ToString());
-                            socket.Send(msg);
-                            State = "Busy";
-                            while (client.GetState() == InstrumentState.Busy)
+                            while (client.GetState() != InstrumentState.Idle) ;
+                            fname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
+                            while (fname == firstfname)
                             {
-                                State = client.GetState().ToString();
-                                // msg = Encoding.UTF8.GetBytes(State);
-                                //socket.Send(msg);
+                                fname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
                             }
-                            State = client.GetState().ToString();
-                            msg = Encoding.UTF8.GetBytes(State);
+                            response.Add("action_msg", fname);
+                            firstfname = fname;
+                            msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                             socket.Send(msg);
 
                         }
-                        if (m.action_handle == "close")
+                        else if (m.action_handle == "close")
                         {
                             client.ClosePlateCarrier();
-                           
                             response = new Dictionary<string, string>();
                             response.Add("action_response", "StepStatus.SUCCEEDED");
                             response.Add("action_msg", "yay");
                             response.Add("action_log", "birch");
+                            while (client.GetState() != InstrumentState.Idle) ;
                             msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
-                            while (client.GetState() != InstrumentState.Idle);
                             socket.Send(msg);
                         }
+                        
 
-                        if (m.action_handle == "state")
+                        else if (m.action_handle == "state")
                         {
                             State = client.GetState().ToString();
                             msg = Encoding.UTF8.GetBytes(State);
                             socket.Send(msg);
 
                         }
-                        if (m.action_handle == "end")
+                        else if (m.action_handle == "end")
                         {
 
                             break;
@@ -164,7 +168,7 @@ namespace ServiceR
                     }
                     socket.Shutdown(SocketShutdown.Both);
                     socket.Disconnect(true);
-                    Thread.Sleep(600);
+                    socket.Close();
                 }
 
             }

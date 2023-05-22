@@ -7,3 +7,4 @@ C:\Users\PF400\source\repos\hidex_driver\hidex_driver\obj\Debug\hidex_driver.csp
 C:\Users\PF400\source\repos\hidex_driver\hidex_driver\obj\Debug\hidex_driver.csproj.CopyComplete
 C:\Users\PF400\source\repos\hidex_driver\hidex_driver\obj\Debug\Project1.exe
 C:\Users\PF400\source\repos\hidex_driver\hidex_driver\obj\Debug\Project1.pdb
+C:\Users\PF400\source\repos\hidex_driver\hidex_driver\obj\Debug\hidex_driver.csproj.AssemblyReference.cache
