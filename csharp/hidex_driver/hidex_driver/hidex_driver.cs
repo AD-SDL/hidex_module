@@ -55,9 +55,8 @@ namespace ServiceR
                   Console.Out.WriteLine("waiting");
                 }
 
-
-                Thread t = new Thread(Ping(client));
-                t.start();
+                Thread t = new Thread(() => Ping(client));
+                t.Start();
 
 
                 Socket socket;
