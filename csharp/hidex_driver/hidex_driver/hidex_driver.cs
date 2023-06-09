@@ -22,11 +22,16 @@ namespace ServiceR
        public void OnStateChanged()
         {
             Console.WriteLine("test");
+            
         }
     }
 
     class Program
     {
+        static void Ping(Project1.ServiceReference1.HidexSenseAutomationServiceClient client) {
+            client.GetState();
+            Thread.Sleep(1);
+        }
         static void Main(string[] args)
         {
             Project1.ServiceReference1.HidexSenseAutomationServiceClient client = new Project1.ServiceReference1.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new test()));
@@ -41,7 +46,7 @@ namespace ServiceR
                 // Step 2: Call the service operations.
                 // Call the Add service operation.
 
-
+                
                 // Step 3: Close the client to gracefully close the connection and clean up resources.
                 Console.WriteLine("\nPress <Enter> to terminate the client.");
                 while (s == InstrumentState.Unknown)
@@ -51,8 +56,8 @@ namespace ServiceR
                 }
 
 
-
-
+                Thread t = new Thread(Ping(client));
+                t.start();
 
 
                 Socket socket;
