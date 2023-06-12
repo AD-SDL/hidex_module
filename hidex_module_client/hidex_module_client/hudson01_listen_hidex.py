@@ -2,6 +2,7 @@ import os
 import sys
 import socket
 from datetime import datetime
+import json
 
 # TODO: find a better way to access the driver functions
 sys.path.append('C:\\Users\\svcaibio\\Dev\\hidex_module')
@@ -29,7 +30,7 @@ while True:
             break
 
         else:
-            msg = eval(message.decode("utf-8"))
+            msg = json.loads(message.decode("utf-8"))
 
             try:  # msg is formatted correctly, will hit except if msg is not dictionary
                 

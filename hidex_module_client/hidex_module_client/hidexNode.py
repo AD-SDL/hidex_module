@@ -4,6 +4,7 @@
 from time import sleep
 
 from hidex_driver.hidex_driver import hidex_reader
+import json
 
 class hidexNode():
     '''
@@ -80,7 +81,7 @@ class hidexNode():
         if request.action_handle=='close_lid':
             self.state = "BUSY"
             self.stateCallback()
-            vars = eval(request.vars)
+            vars = json.loads(request.vars)
             print(vars)
             prog = vars.get('program_n')
             self.hidex.run_program(prog)
