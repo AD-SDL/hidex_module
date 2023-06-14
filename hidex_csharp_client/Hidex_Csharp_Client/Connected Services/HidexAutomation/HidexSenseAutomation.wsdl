@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://AurentiaSolutions/HidexSenseAutomation" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://AurentiaSolutions/HidexSenseAutomation" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://AurentiaSolutions/HidexSenseAutomation/Imports">
+      <xsd:import namespace="http://AurentiaSolutions/HidexSenseAutomation" />
+      <xsd:import namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+      <xsd:import namespace="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+      <xsd:import namespace="http://schemas.datacontract.org/2004/07/HidexSense.Automation" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="IHidexSenseAutomationService_CanRunAssay_InputMessage">
+    <wsdl:part name="parameters" element="tns:CanRunAssay" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_CanRunAssay_OutputMessage">
+    <wsdl:part name="parameters" element="tns:CanRunAssayResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_CanRunAssayWithSampleData_InputMessage">
+    <wsdl:part name="parameters" element="tns:CanRunAssayWithSampleData" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_CanRunAssayWithSampleData_OutputMessage">
+    <wsdl:part name="parameters" element="tns:CanRunAssayWithSampleDataResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_ClosePlateCarrier_InputMessage">
+    <wsdl:part name="parameters" element="tns:ClosePlateCarrier" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_ClosePlateCarrier_OutputMessage">
+    <wsdl:part name="parameters" element="tns:ClosePlateCarrierResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_Connect_InputMessage">
+    <wsdl:part name="parameters" element="tns:Connect" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_Connect_OutputMessage">
+    <wsdl:part name="parameters" element="tns:ConnectResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_Disconnect_InputMessage">
+    <wsdl:part name="parameters" element="tns:Disconnect" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_Disconnect_OutputMessage">
+    <wsdl:part name="parameters" element="tns:DisconnectResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetAssays_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetAssays" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetAssays_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetAssaysResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetAutoExportPath_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetAutoExportPath" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetAutoExportPath_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetAutoExportPathResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetInterfaceVersion_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetInterfaceVersion" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetInterfaceVersion_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetInterfaceVersionResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetState_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetState" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_GetState_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetStateResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_OpenPlateCarrier_InputMessage">
+    <wsdl:part name="parameters" element="tns:OpenPlateCarrier" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_OpenPlateCarrier_OutputMessage">
+    <wsdl:part name="parameters" element="tns:OpenPlateCarrierResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_SetAutoExportPath_InputMessage">
+    <wsdl:part name="parameters" element="tns:SetAutoExportPath" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_SetAutoExportPath_OutputMessage">
+    <wsdl:part name="parameters" element="tns:SetAutoExportPathResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StartAssay_InputMessage">
+    <wsdl:part name="parameters" element="tns:StartAssay" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StartAssay_OutputMessage">
+    <wsdl:part name="parameters" element="tns:StartAssayResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StartAssayWithMetadata_InputMessage">
+    <wsdl:part name="parameters" element="tns:StartAssayWithMetadata" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StartAssayWithMetadata_OutputMessage">
+    <wsdl:part name="parameters" element="tns:StartAssayWithMetadataResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StartAssayWithSampleData_InputMessage">
+    <wsdl:part name="parameters" element="tns:StartAssayWithSampleData" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StartAssayWithSampleData_OutputMessage">
+    <wsdl:part name="parameters" element="tns:StartAssayWithSampleDataResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StopAssay_InputMessage">
+    <wsdl:part name="parameters" element="tns:StopAssay" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_StopAssay_OutputMessage">
+    <wsdl:part name="parameters" element="tns:StopAssayResponse" />
+  </wsdl:message>
+  <wsdl:message name="IHidexSenseAutomationService_OnStateChanged_OutputCallbackMessage">
+    <wsdl:part name="parameters" element="tns:OnStateChanged" />
+  </wsdl:message>
+  <wsdl:portType msc:usingSession="true" name="IHidexSenseAutomationService">
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="CanRunAssay">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/CanRunAssay" message="tns:IHidexSenseAutomationService_CanRunAssay_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/CanRunAssayResponse" message="tns:IHidexSenseAutomationService_CanRunAssay_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="CanRunAssayWithSampleData">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/CanRunAssayWithSampleData" message="tns:IHidexSenseAutomationService_CanRunAssayWithSampleData_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/CanRunAssayWithSampleDataResponse" message="tns:IHidexSenseAutomationService_CanRunAssayWithSampleData_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="ClosePlateCarrier">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/ClosePlateCarrier" message="tns:IHidexSenseAutomationService_ClosePlateCarrier_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/ClosePlateCarrierResponse" message="tns:IHidexSenseAutomationService_ClosePlateCarrier_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="true" msc:isTerminating="false" name="Connect">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/Connect" message="tns:IHidexSenseAutomationService_Connect_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/ConnectResponse" message="tns:IHidexSenseAutomationService_Connect_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="true" name="Disconnect">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/Disconnect" message="tns:IHidexSenseAutomationService_Disconnect_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/DisconnectResponse" message="tns:IHidexSenseAutomationService_Disconnect_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="GetAssays">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetAssays" message="tns:IHidexSenseAutomationService_GetAssays_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetAssaysResponse" message="tns:IHidexSenseAutomationService_GetAssays_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="GetAutoExportPath">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetAutoExportPath" message="tns:IHidexSenseAutomationService_GetAutoExportPath_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetAutoExportPathResponse" message="tns:IHidexSenseAutomationService_GetAutoExportPath_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="GetInterfaceVersion">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetInterfaceVersion" message="tns:IHidexSenseAutomationService_GetInterfaceVersion_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetInterfaceVersionResponse" message="tns:IHidexSenseAutomationService_GetInterfaceVersion_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="GetState">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetState" message="tns:IHidexSenseAutomationService_GetState_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetStateResponse" message="tns:IHidexSenseAutomationService_GetState_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="OpenPlateCarrier">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/OpenPlateCarrier" message="tns:IHidexSenseAutomationService_OpenPlateCarrier_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/OpenPlateCarrierResponse" message="tns:IHidexSenseAutomationService_OpenPlateCarrier_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="SetAutoExportPath">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/SetAutoExportPath" message="tns:IHidexSenseAutomationService_SetAutoExportPath_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/SetAutoExportPathResponse" message="tns:IHidexSenseAutomationService_SetAutoExportPath_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="StartAssay">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StartAssay" message="tns:IHidexSenseAutomationService_StartAssay_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StartAssayResponse" message="tns:IHidexSenseAutomationService_StartAssay_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="StartAssayWithMetadata">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StartAssayWithMetadata" message="tns:IHidexSenseAutomationService_StartAssayWithMetadata_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StartAssayWithMetadataResponse" message="tns:IHidexSenseAutomationService_StartAssayWithMetadata_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="StartAssayWithSampleData">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StartAssayWithSampleData" message="tns:IHidexSenseAutomationService_StartAssayWithSampleData_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StartAssayWithSampleDataResponse" message="tns:IHidexSenseAutomationService_StartAssayWithSampleData_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="false" msc:isTerminating="false" name="StopAssay">
+      <wsdl:input wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StopAssay" message="tns:IHidexSenseAutomationService_StopAssay_InputMessage" />
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/StopAssayResponse" message="tns:IHidexSenseAutomationService_StopAssay_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation msc:isInitiating="true" msc:isTerminating="false" name="OnStateChanged">
+      <wsdl:output wsaw:Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/OnStateChanged" message="tns:IHidexSenseAutomationService_OnStateChanged_OutputCallbackMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>
