@@ -1,0 +1,10 @@
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\bin\Debug\Hidex_Csharp_Client.exe.config
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\bin\Debug\Hidex_Csharp_Client.exe
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\bin\Debug\Hidex_Csharp_Client.pdb
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\bin\Debug\Newtonsoft.Json.dll
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\bin\Debug\Newtonsoft.Json.xml
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\obj\Debug\Hidex_Csharp_Client.csproj.AssemblyReference.cache
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\obj\Debug\Hidex_Csharp_Client.csproj.CoreCompileInputs.cache
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\obj\Debug\Hidex_Csharp_Client.csproj.CopyComplete
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\obj\Debug\Hidex_Csharp_Client.exe
+C:\Users\PF400\source\repos\Hidex_Csharp_Client\Hidex_Csharp_Client\obj\Debug\Hidex_Csharp_Client.pdb
