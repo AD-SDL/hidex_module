@@ -101,7 +101,15 @@ namespace ServiceR
 
                     {
                         bytesReceived = socket.Receive(responseBytes);
-
+                        try
+                        {
+                            client.GetState()
+                        }
+                        catch (Exception e)
+                        {
+                            client.Close();
+                            client.Connect(false);
+                        }
                         // Receiving 0 bytes means EOF has been reached
                         if (bytesReceived == 0)
                         {
