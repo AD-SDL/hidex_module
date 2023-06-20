@@ -31,11 +31,17 @@ namespace ServiceR
         static void Ping(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
         {
             InstrumentState hidex_state = client.GetState();
-            while (client.GetState() != InstrumentState.Unknown)
+            while (true)
             {
-                hidex_state = client.GetState();
-                Console.Out.WriteLine(hidex_state.ToString());
-                Thread.Sleep(1);
+                try
+                {
+                    hidex_state = client.GetState();
+                    Console.Out.WriteLine(hidex_state.ToString());
+                    Thread.Sleep(1000);
+                } catch (Exception ex)
+                {
+                    Console.Out.WriteLine(ex.ToString());
+                }
             }
         }
         static void Main(string[] args)
@@ -79,7 +85,7 @@ namespace ServiceR
                 socketo = new Socket(SocketType.Stream, ProtocolType.Tcp);
                 socketo.Bind(T);
                 Dictionary<string, string> response;
-                DirectoryInfo dir = new DirectoryInfo("C:\\Users\\PF400\\Documents\\Hidex_Files");
+                DirectoryInfo dir = new DirectoryInfo("C:\\labautomation\\data_wei\\proc");
                 string fname;
                 string firstfname;
                 firstfname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
@@ -103,12 +109,28 @@ namespace ServiceR
                         bytesReceived = socket.Receive(responseBytes);
                         try
                         {
-                            client.GetState()
+                            s = client.GetState();
+                            if (client.GetState() == InstrumentState.Unknown) {
+                                client.Close();
+                                client.Connect(false);
+                                s = client.GetState();
+                                while (s == InstrumentState.Unknown)
+                                {
+                                    s = client.GetState();
+                                    Console.Out.WriteLine("waiting");
+                                }
+                            }
                         }
                         catch (Exception e)
                         {
                             client.Close();
                             client.Connect(false);
+                            s = client.GetState();
+                            while (s == InstrumentState.Unknown)
+                            {
+                                s = client.GetState();
+                                Console.Out.WriteLine("waiting");
+                            }
                         }
                         // Receiving 0 bytes means EOF has been reached
                         if (bytesReceived == 0)
@@ -140,7 +162,7 @@ namespace ServiceR
                         }
                         else if (m.action_handle == "run_assay")
                         {
-                            client.SetAutoExportPath("C:/Users/PF400/Documents/Hidex_Files");
+                            client.SetAutoExportPath("C:\\labautomation\\data_wei\\proc");
                             client.StartAssay(m.action_vars["assay_name"]);
                             Path = client.GetAutoExportPath();
                             response = new Dictionary<string, string>
