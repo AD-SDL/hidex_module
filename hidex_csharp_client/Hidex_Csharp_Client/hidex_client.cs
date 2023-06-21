@@ -28,7 +28,7 @@ namespace ServiceR
 
     class Main_Client
     {
-        static void Ping(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
+        static void Ping_Hidex(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
         {
             InstrumentState hidex_state = client.GetState();
             while (true)
@@ -65,8 +65,8 @@ namespace ServiceR
                     Console.Out.WriteLine("waiting");
                 }
 
-                Thread ping = new Thread(() => Ping(client));
-                ping.Start();
+                Thread ping_hidex = new Thread(() => Ping_Hidex(client));
+                ping_hidex.Start();
 
                 //
                 Socket socket;
@@ -75,7 +75,7 @@ namespace ServiceR
                 IPEndPoint Endpoint = new IPEndPoint(0, 2000);
                 byte[] responseBytes = new byte[256];
                 char[] responseChars = new char[256];
-                int c = 0;
+                
                 int bytesReceived = 0;
                 string Path;
                 byte[] msg;
@@ -89,6 +89,8 @@ namespace ServiceR
                 firstfname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
                 while (true)
                 {
+                 
+                    client.Connect(false);
                     responseBytes = new byte[256];
                     responseChars = new char[256];
                     // Read the request.
