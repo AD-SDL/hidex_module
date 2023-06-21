@@ -16,7 +16,7 @@ namespace ServiceR
 
         public Dictionary<string, string> action_vars { get; set; }
     }
-
+    //Wrapper to define how the Automation service handles connections
     public class Callback_Wrapper : Hidex_Csharp_Client.HidexAutomation.IHidexSenseAutomationServiceCallback
     {
         public void OnStateChanged()
@@ -31,11 +31,19 @@ namespace ServiceR
         static void Ping(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
         {
             InstrumentState hidex_state = client.GetState();
-            while (client.GetState() != InstrumentState.Unknown)
+            while (true)
             {
-                hidex_state = client.GetState();
-                Console.Out.WriteLine(hidex_state.ToString());
-                Thread.Sleep(1);
+                try
+                {   
+
+                   
+                    hidex_state = client.GetState();
+                 
+                    Thread.Sleep(1000);
+                } catch (Exception ex)
+                {
+                    Console.Out.WriteLine(ex.ToString());
+                }
             }
         }
         static void Main(string[] args)
@@ -43,41 +51,37 @@ namespace ServiceR
             Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client = new Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()));
             try
             {
-                //Step 1: Create an instance of the WCF proxy.
+                //Connect to the Hidex
 
                 client.Connect(false);
                 Hidex_Csharp_Client.HidexAutomation.InstrumentState s = client.GetState();
-                Console.WriteLine(s);
-                //client.OpenPlateCarrier() ;
-                // Step 2: Call the service operations.
-                // Call the Add service operation.
-
-
-                // Step 3: Close the client to gracefully close the connection and clean up resources.
-                Console.WriteLine("\nPress <Enter> to terminate the client.");
+                
+               
+              //Wait for connection to verify
+               
                 while (s == InstrumentState.Unknown)
                 {
                     s = client.GetState();
                     Console.Out.WriteLine("waiting");
                 }
 
-                Thread t = new Thread(() => Ping(client));
-                t.Start();
+                Thread ping = new Thread(() => Ping(client));
+                ping.Start();
 
-
+                //
                 Socket socket;
-                Socket socketo;
-                Dns.GetHostEntry("146.137.240.22");
-                IPEndPoint T = new IPEndPoint(0, 2000);
+                Socket attach_socket;
+               
+                IPEndPoint Endpoint = new IPEndPoint(0, 2000);
                 byte[] responseBytes = new byte[256];
                 char[] responseChars = new char[256];
                 int c = 0;
                 int bytesReceived = 0;
                 string Path;
                 byte[] msg;
-                string State;
-                socketo = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                socketo.Bind(T);
+
+                attach_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                attach_socket.Bind(Endpoint);
                 Dictionary<string, string> response;
                 DirectoryInfo dir = new DirectoryInfo("C:\\Users\\PF400\\Documents\\Hidex_Files");
                 string fname;
@@ -87,21 +91,13 @@ namespace ServiceR
                 {
                     responseBytes = new byte[256];
                     responseChars = new char[256];
-                    socketo.Listen(10000000);
-                    socket = socketo.Accept();
-
-
-                    // Send the request.
-                    // For the tiny amount of data in this example, the first call to Send() will likely deliver the buffer completely,
-                    // however this is not guaranteed to happen for larger real-life buffers.
-                    // The best practice is to iterate until all the data is sent.
-
-                    // Do minimalistic buffering assuming ASCII response
-
-
+                    // Read the request.
+                    attach_socket.Listen(10000000);
+                    //Accept creates a new socket object, that needs to be refreshed.
+                    socket = attach_socket.Accept();
                     {
                         bytesReceived = socket.Receive(responseBytes);
-
+                       
                         // Receiving 0 bytes means EOF has been reached
                         if (bytesReceived == 0)
                         {
@@ -111,20 +107,18 @@ namespace ServiceR
                         // Convert byteCount bytes to ASCII characters using the 'responseChars' buffer as destination
                         int charCount = Encoding.ASCII.GetChars(responseBytes, 0, bytesReceived, responseChars, 0);
 
-                        // Print the contents of the 'responseChars' buffer to Console.Out
-                        Console.Out.Write(responseChars, 0, charCount);
-                        Console.Out.Write(responseChars);
+                        //Processed recieved data into Message object
                         Message m = JsonConvert.DeserializeObject<Message>(new string(responseChars));
                         Console.Out.Write(m);
-
+                        //Define Actions
                         if (m.action_handle == "open")
                         {
                             client.OpenPlateCarrier();
                             response = new Dictionary<string, string>
                             {
                                 { "action_response", "StepStatus.SUCCEEDED" },
-                                { "action_msg", "yay" },
-                                { "action_log", "birch" }
+                                { "action_msg", client.GetState().ToString() },
+                                { "action_log", "Completed" }
                             };
                             while (client.GetState() != InstrumentState.Idle) ;
                             msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
@@ -132,13 +126,13 @@ namespace ServiceR
                         }
                         else if (m.action_handle == "run_assay")
                         {
-                            client.SetAutoExportPath("C:/Users/PF400/Documents/Hidex_Files");
+                            client.SetAutoExportPath("C:\\labautomation\\data_wei\\proc");
                             client.StartAssay(m.action_vars["assay_name"]);
                             Path = client.GetAutoExportPath();
                             response = new Dictionary<string, string>
                             {
                                 { "action_response", "StepStatus.SUCCEEDED" },
-                                { "action_log", "birch" }
+                                { "action_log", "Completed" }
                             };
                             while (client.GetState() != InstrumentState.Idle) ;
                             fname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
@@ -158,8 +152,8 @@ namespace ServiceR
                             response = new Dictionary<string, string>
                             {
                                 { "action_response", "StepStatus.SUCCEEDED" },
-                                { "action_msg", "yay" },
-                                { "action_log", "birch" }
+                                { "action_msg",  client.GetState().ToString() },
+                                { "action_log", "Completed" }
                             };
                             while (client.GetState() != InstrumentState.Idle) ;
                             msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
@@ -173,7 +167,7 @@ namespace ServiceR
                             {
                                 { "action_response", "StepStatus.SUCCEEDED" },
                                 { "action_msg", client.GetState().ToString() },
-                                { "action_log", "birch" }
+                                { "action_log", "Completed" }
                             };
 
                             msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
@@ -186,6 +180,7 @@ namespace ServiceR
                             break;
                         }
                     }
+                    // Step 3: Close the client to gracefully close the connection and clean up resources.
                     socket.Shutdown(SocketShutdown.Both);
                     socket.Disconnect(true);
                     socket.Close();
