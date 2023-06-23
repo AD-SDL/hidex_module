@@ -31,7 +31,7 @@ namespace ServiceR
     class Main_Client
     {
         static Boolean action_in_process = false;
-        static void Ping(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
+        static void Ping_Hidex_State(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
         {
             while (true)
             {
@@ -79,11 +79,11 @@ namespace ServiceR
                     Console.Out.WriteLine("Initialization");
                 }
 
-                Thread t = new Thread(() => Ping(client));
+                Thread t = new Thread(() => Ping_Hidex_State(client));
                 t.Start();
 
                 Socket socket;
-                Socket socketo;
+                Socket attach_socket;
                 Dns.GetHostEntry("146.137.240.22");
                 IPEndPoint T = new IPEndPoint(0, 2000);
                 byte[] responseBytes = new byte[256];
@@ -92,9 +92,8 @@ namespace ServiceR
                 int bytesReceived = 0;
                 string Path;
                 byte[] msg;
-                string State;
-                socketo = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                socketo.Bind(T);
+                attach_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                attach_socket.Bind(T);
                 Dictionary<string, string> response;
                 DirectoryInfo dir = new DirectoryInfo("C:\\labautomation\\data_wei\\proc");
                 string fname;
@@ -116,8 +115,8 @@ namespace ServiceR
                     
                     responseBytes = new byte[256];
                     responseChars = new char[256];
-                    socketo.Listen(10000000);
-                    socket = socketo.Accept();
+                    attach_socket.Listen(10000000);
+                    socket = attach_socket.Accept();
 
                     Console.WriteLine("Socket Accepted");
 
@@ -179,7 +178,7 @@ namespace ServiceR
                             response = new Dictionary<string, string>
                             {
                                 { "action_response", "StepStatus.SUCCEEDED" },
-                                { "action_msg", "yay" },
+                                { "action_msg", client.GetState().ToString() },
                                 { "action_log", "birch" }
                             };
                             while (client.GetState() != InstrumentState.Idle) ;
@@ -241,7 +240,6 @@ namespace ServiceR
 
                             msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                             socket.Send(msg);
-                            Ping(client);
                             action_in_process = false;
 
                         }
