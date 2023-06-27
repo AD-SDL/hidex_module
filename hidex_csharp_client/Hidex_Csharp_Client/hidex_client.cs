@@ -31,19 +31,28 @@ namespace ServiceR
     class Main_Client
     {
         static Boolean action_in_process = false;
-        static void Ping_Hidex_State(Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client)
+        static Boolean accepting_socket_for_testing_purposes = false;
+        static String ping_message = "Sending Ping Continuously";
+        static Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client = new Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()));
+
+        static void Ping_Hidex_State(/*Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client*/)
         {
             while (true)
             {
-                if (!action_in_process)
+                if (!action_in_process && !accepting_socket_for_testing_purposes)
                 {
                     try
                     {
                         Thread.Sleep(5000);
                         if (client.GetState() == InstrumentState.Idle)
                         {
-               
-                            Console.WriteLine("Running Ping Continuously");
+                            /*
+                            if (!accepting_socket_for_testing_purposes)
+                            {
+                                Console.WriteLine("Ping Status: Idle");
+                            }
+                            */
+                            Console.WriteLine("Ping Status: Idle");
                         }
 
                     }
@@ -58,7 +67,7 @@ namespace ServiceR
         }
         static void Main(string[] args)
         {
-            Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client = new Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()));
+//            Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client = new Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()));
             try
             {
                 //Step 1: Create an instance of the WCF proxy.
@@ -79,7 +88,7 @@ namespace ServiceR
                     Console.Out.WriteLine("Initialization");
                 }
 
-                Thread t = new Thread(() => Ping_Hidex_State(client));
+                Thread t = new Thread(() => Ping_Hidex_State(/*client*/));
                 t.Start();
 
                 Socket socket;
@@ -99,7 +108,6 @@ namespace ServiceR
                 string fname;
                 string firstfname;
                 firstfname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
-                int lastTime = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
                 while (true)
                 {
                     if (client.GetState() == InstrumentState.Idle) {
@@ -112,13 +120,18 @@ namespace ServiceR
                             Console.Out.WriteLine(ex.ToString());
                         }
                     }
-                    
+
+                    accepting_socket_for_testing_purposes = true;
+                    TimeZoneInfo CRtimezone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                    Console.WriteLine("Called Inside Ping Statement -- Last Socket Test: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CRtimezone));
                     responseBytes = new byte[256];
                     responseChars = new char[256];
                     attach_socket.Listen(10000000);
                     socket = attach_socket.Accept();
 
                     Console.WriteLine("Socket Accepted");
+                    accepting_socket_for_testing_purposes = false;
+
 
 
                     // Send the request.
