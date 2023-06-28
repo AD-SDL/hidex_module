@@ -143,7 +143,7 @@ namespace ServiceR
                         //socket = attach_socket.Accept();
                         socket = tcpListener.AcceptSocket();
 
-                        Console.WriteLine("Socket Accepted");
+                        Console.WriteLine("Socket Accepted. Socket Timeout Variable: " + socket.ReceiveTimeout);
                         //accepting_socket_for_testing_purposes = false;
 
 
@@ -156,6 +156,7 @@ namespace ServiceR
                         // Do minimalistic buffering assuming ASCII response
 
 
+                        if (socket.Poll(0, SelectMode.SelectRead) && !socket.Poll(0, SelectMode.SelectError))
                         {
                             bytesReceived = socket.Receive(responseBytes);
                             try
@@ -176,6 +177,8 @@ namespace ServiceR
                             }
                             catch (Exception e)
                             {
+                                TimeZoneInfo central_time = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                                Console.WriteLine("Error Occurred: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, central_time));
                                 client.Close();
                                 client.Connect(false);
                                 s = client.GetState();
@@ -278,6 +281,20 @@ namespace ServiceR
                             action_finished = true;
 
                         }
+                        else 
+                        {
+                            if (!socket.Poll(0, SelectMode.SelectRead)) {
+                                Console.WriteLine("There was no data to read. Closing socket");
+                                TimeZoneInfo central = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                                Console.WriteLine("Instance Occurred: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, central));
+                            }
+                            if (socket.Poll(0, SelectMode.SelectError)) {
+                                Console.WriteLine("RST packet has been sent to remotely close the socket. Closing socket");
+                                TimeZoneInfo central = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                                Console.WriteLine("Instance Occurred: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, central));
+                            }
+                        }
+
                         socket.Shutdown(SocketShutdown.Both);
                         socket.Disconnect(true);
                         socket.Close();
@@ -288,11 +305,13 @@ namespace ServiceR
                         if (client.GetState() == InstrumentState.Idle && !action_finished)
                         {
                             Thread.Sleep(5000);
-                            Console.WriteLine("Ping Status: Idle");
+                            //Console.WriteLine("Ping Status: Idle");
                         }
                     }
                     catch (Exception ex)
                     {
+                        TimeZoneInfo CRtimezone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                        Console.WriteLine("Error Occurred: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CRtimezone));
                         Console.Out.WriteLine(ex.ToString());
                     }
                     action_finished = false;
@@ -305,6 +324,8 @@ namespace ServiceR
             }
             catch (Exception e)
             {
+                TimeZoneInfo CRtimezone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                Console.WriteLine("Error Occurred: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CRtimezone));
                 Console.Out.Write(e);
                 Console.ReadLine();
             }
