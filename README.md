@@ -1,1 +1,1 @@
-# hidex_driver
+# hidex_module
