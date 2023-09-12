@@ -8,9 +8,6 @@ using System.Net.Sockets;
 using System.Net;
 using Newtonsoft.Json;
 using System.Threading;
-using System.Runtime.InteropServices;
-using System.ServiceModel.Configuration;
-using System.Runtime.CompilerServices;
 using System.ServiceModel.Channels;
 using System.ServiceModel;
 
@@ -37,44 +34,11 @@ namespace ServiceR
         static Boolean action_in_process = false;
         static Boolean action_finished = false;
         static Boolean end_called = false;
-        //static Boolean accepting_socket_for_testing_purposes = false;
-        static String ping_message = "Sending Ping Continuously";
 
-        static Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client;// = new Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()));
+        static Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client;
 
-        /*static void Ping_Hidex_State(/*Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client*//*)
-        {
-            while (true)
-            {
-                if (!action_in_process && !accepting_socket_for_testing_purposes)
-                {
-                    try
-                    {
-                        Thread.Sleep(5000);
-                        if (client.GetState() == InstrumentState.Idle)
-                        {
-                            /*
-                            if (!accepting_socket_for_testing_purposes)
-                            {
-                                Console.WriteLine("Ping Status: Idle");
-                            }
-                            *//*
-                            Console.WriteLine("Ping Status: Idle");
-                        }
-
-                    }
-
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Catch: In Ping Statement");
-                        Console.Out.WriteLine(ex.ToString());
-                    }
-                }
-            }
-        }*/
         static void Main(string[] args)
         {
-//            Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient client = new Hidex_Csharp_Client.HidexAutomation.HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()));
             try
             {
 
@@ -90,11 +54,14 @@ namespace ServiceR
                     Host = "localhost",
                     Path = "HidexSenseAutomation/"
                 }.Uri, new AddressHeader[0]);
-                client = new HidexSenseAutomationServiceClient(new System.ServiceModel.InstanceContext(new Callback_Wrapper()), (Binding)customBinding, remoteAddress);
+                client = new HidexSenseAutomationServiceClient(
+                    new System.ServiceModel.InstanceContext(new Callback_Wrapper()),
+                    (Binding)customBinding,
+                    remoteAddress
+                );
                 client.Connect(false);
                 Hidex_Csharp_Client.HidexAutomation.InstrumentState s = client.GetState();
                 Console.WriteLine(s);
-                //client.OpenPlateCarrier() ;
                 // Step 2: Call the service operations.
                 // Call the Add service operation.
 
@@ -107,11 +74,7 @@ namespace ServiceR
                     Console.Out.WriteLine("Initialization: Hidex State Unknown");
                 }
 
-                //Thread t = new Thread(() => Ping_Hidex_State(/*client*/));
-                //t.Start();
-
                 Socket socket;
-                //Socket attach_socket;
                 Dns.GetHostEntry("146.137.240.22");
                 IPEndPoint T = new IPEndPoint(0, 2000);
                 byte[] responseBytes = new byte[256];
@@ -120,8 +83,6 @@ namespace ServiceR
                 int bytesReceived = 0;
                 string Path;
                 byte[] msg;
-                //attach_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                //attach_socket.Bind(T);
                 Dictionary<string, string> response;
                 DirectoryInfo dir = new DirectoryInfo("C:\\labautomation\\data_wei\\proc");
                 string fname;
@@ -136,13 +97,10 @@ namespace ServiceR
                 {
                   
                     if (tcpListener.Pending()) {
-                        //accepting_socket_for_testing_purposes = true;
                         TimeZoneInfo CRtimezone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
                         Console.WriteLine("Last Socket Connection: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CRtimezone));
                         responseBytes = new byte[256];
                         responseChars = new char[256];
-                        //attach_socket.Listen(10000000);
-                        //socket = attach_socket.Accept();
 
                         socket = tcpListener.AcceptSocket();
                         socket.ReceiveTimeout = Timeout.Infinite;
@@ -155,7 +113,6 @@ namespace ServiceR
 
                         Console.WriteLine("Socket Accepted. Socket Timeout Variable: " + socket.ReceiveTimeout);
                         Console.WriteLine("Available Readable Data Coming from Connnection: " + socket.Available);
-                        //accepting_socket_for_testing_purposes = false;
 
 
 
@@ -322,7 +279,6 @@ namespace ServiceR
                         if (client.GetState() == InstrumentState.Idle && !action_finished)
                         {
                             Thread.Sleep(5000);
-                            //Console.WriteLine("Ping Status: Idle");
                         }
                     }
                     catch (Exception ex)
@@ -334,7 +290,7 @@ namespace ServiceR
                     action_finished = false;
                 }
 
-                //End Case: This executes once the escape key is pressed or 
+                //End Case: This executes once the escape key is pressed
                 client.Disconnect();
                 client.Close();
 
@@ -346,13 +302,6 @@ namespace ServiceR
                 Console.Out.Write(e);
                 Console.ReadLine();
             }
-            /*
-            finally
-            {
-                client.Disconnect();
-                client.Close();
-            }
-            */
         }
     }
 }
