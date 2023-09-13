@@ -72,6 +72,8 @@ namespace ServiceR
                     s = client.GetState();
                     System.Threading.Thread.Sleep(1000);
                 }
+                Console.WriteLine("Hidex Client State:");
+                Console.WriteLine(s);
 
                 Socket socket;
                 IPAddress allowedIPAddress = IPAddress.Parse(allowedIP);
