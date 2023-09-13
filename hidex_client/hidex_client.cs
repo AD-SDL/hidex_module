@@ -37,6 +37,11 @@ namespace ServiceR
 
         static void Main(string[] args)
         {
+            // Configuration
+            const String output_directory = "C:\\labautomation\\data_wei\\proc";
+            const Boolean allowedIPOnly = true;
+            const String allowedIP = "146.137.240.65";
+
             try
             {
                 ReliableSessionBindingElement sessionBindingElement = new ReliableSessionBindingElement();
@@ -69,7 +74,7 @@ namespace ServiceR
                 }
 
                 Socket socket;
-                Dns.GetHostEntry("146.137.240.22");
+                IPAddress allowedIPAddress = IPAddress.Parse(allowedIP);
                 IPEndPoint T = new IPEndPoint(0, 2000);
                 byte[] responseBytes = new byte[256];
                 char[] responseChars = new char[256];
@@ -77,11 +82,10 @@ namespace ServiceR
                 string Path;
                 byte[] msg;
                 Dictionary<string, string> response;
-                DirectoryInfo dir = new DirectoryInfo("C:\\labautomation\\data_wei\\proc");
+                DirectoryInfo dir = new DirectoryInfo(output_directory);
                 string fname;
                 string firstfname;
                 firstfname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
-                IPAddress allowedIPAddress = IPAddress.Parse("146.137.240.65");
 
                 TcpListener tcpListener = new TcpListener(IPAddress.Any, 2000);
                 tcpListener.Start();
@@ -114,7 +118,7 @@ namespace ServiceR
                         // The best practice is to iterate until all the data is sent.
 
                         // Do minimalistic buffering assuming ASCII response
-                        if (remoteIP.Equals(allowedIPAddress))
+                        if (allowedIPOnly && remoteIP.Equals(allowedIPAddress))
                         {
                             if (socket.Poll(0, SelectMode.SelectRead) && !socket.Poll(0, SelectMode.SelectError))
                             {
