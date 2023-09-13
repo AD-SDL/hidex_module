@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using Hidex_Csharp_Client.HidexAutomation;
-using System.Net.Sockets;
-using System.Net;
+﻿using Hidex_Csharp_Client.HidexAutomation;
 using Newtonsoft.Json;
-using System.Threading;
-using System.ServiceModel.Channels;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
+using System.Text;
+using System.Threading;
 
 namespace ServiceR
 {
     public class Message
     {
         public string action_handle { get; set; }
-
         public Dictionary<string, string> action_vars { get; set; }
     }
 
@@ -24,8 +23,7 @@ namespace ServiceR
     {
         public void OnStateChanged()
         {
-            Console.WriteLine("test");
-
+            Console.WriteLine("Initialized!");
         }
     }
 
@@ -41,8 +39,6 @@ namespace ServiceR
         {
             try
             {
-
-                //Step 1: Create an instance of the WCF proxy.
                 ReliableSessionBindingElement sessionBindingElement = new ReliableSessionBindingElement();
                 CustomBinding customBinding = new CustomBinding();
                 customBinding.Elements.Add((BindingElement)sessionBindingElement);
@@ -61,17 +57,15 @@ namespace ServiceR
                 );
                 client.Connect(false);
                 Hidex_Csharp_Client.HidexAutomation.InstrumentState s = client.GetState();
+                Console.WriteLine("Hidex Client State:");
                 Console.WriteLine(s);
-                // Step 2: Call the service operations.
-                // Call the Add service operation.
 
-
-                // Step 3: Close the client to gracefully close the connection and clean up resources.
-                Console.WriteLine("\nPress <Enter> to terminate the client.");
+                Console.Write("Initializing...");
                 while (s == InstrumentState.Unknown)
                 {
+                    Console.Write(".");
                     s = client.GetState();
-                    Console.Out.WriteLine("Initialization: Hidex State Unknown");
+                    System.Threading.Thread.Sleep(1000);
                 }
 
                 Socket socket;
@@ -79,7 +73,6 @@ namespace ServiceR
                 IPEndPoint T = new IPEndPoint(0, 2000);
                 byte[] responseBytes = new byte[256];
                 char[] responseChars = new char[256];
-                int c = 0;
                 int bytesReceived = 0;
                 string Path;
                 byte[] msg;
@@ -88,15 +81,16 @@ namespace ServiceR
                 string fname;
                 string firstfname;
                 firstfname = dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
-                IPAddress allowedIPAddress = IPAddress.Parse("146.137.240.65"); 
+                IPAddress allowedIPAddress = IPAddress.Parse("146.137.240.65");
 
                 TcpListener tcpListener = new TcpListener(IPAddress.Any, 2000);
                 tcpListener.Start();
 
+                Console.WriteLine("\nPress <Esc> to terminate the client.");
                 while (!(Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape) && !end_called)
                 {
-                  
-                    if (tcpListener.Pending()) {
+                    if (tcpListener.Pending())
+                    {
                         TimeZoneInfo CRtimezone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
                         Console.WriteLine("Last Socket Connection: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CRtimezone));
                         responseBytes = new byte[256];
@@ -114,15 +108,12 @@ namespace ServiceR
                         Console.WriteLine("Socket Accepted. Socket Timeout Variable: " + socket.ReceiveTimeout);
                         Console.WriteLine("Available Readable Data Coming from Connnection: " + socket.Available);
 
-
-
                         // Send the request.
                         // For the tiny amount of data in this example, the first call to Send() will likely deliver the buffer completely,
                         // however this is not guaranteed to happen for larger real-life buffers.
                         // The best practice is to iterate until all the data is sent.
 
                         // Do minimalistic buffering assuming ASCII response
-
                         if (remoteIP.Equals(allowedIPAddress))
                         {
                             if (socket.Poll(0, SelectMode.SelectRead) && !socket.Poll(0, SelectMode.SelectError))
@@ -146,6 +137,7 @@ namespace ServiceR
                                 }
                                 catch (Exception e)
                                 {
+                                    Console.WriteLine(e.ToString());
                                     TimeZoneInfo central_time = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
                                     Console.WriteLine("From Try Statement on Line 162: " + TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, central_time));
                                     client.Close();
@@ -208,35 +200,31 @@ namespace ServiceR
                                     msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                                     socket.Send(msg);
                                     action_in_process = false;
-
-
                                 }
                                 else if (m.action_handle == "close")
                                 {
                                     action_in_process = true;
                                     client.ClosePlateCarrier();
                                     response = new Dictionary<string, string>
-                                {
-                                    { "action_response", "StepStatus.SUCCEEDED" },
-                                    { "action_msg", "yay" },
-                                    { "action_log", "birch" }
-                                };
+                                        {
+                                            { "action_response", "StepStatus.SUCCEEDED" },
+                                            { "action_msg", "yay" },
+                                            { "action_log", "birch" }
+                                        };
                                     while (client.GetState() != InstrumentState.Idle) ;
                                     msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                                     socket.Send(msg);
                                     action_in_process = false;
                                 }
-
-
                                 else if (m.action_handle == "state")
                                 {
                                     action_in_process = true;
                                     response = new Dictionary<string, string>
-                                {
-                                    { "action_response", "StepStatus.SUCCEEDED" },
-                                    { "action_msg", client.GetState().ToString() },
-                                    { "action_log", "birch" }
-                                };
+                                        {
+                                            { "action_response", "StepStatus.SUCCEEDED" },
+                                            { "action_msg", client.GetState().ToString() },
+                                            { "action_log", "birch" }
+                                        };
 
                                     msg = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                                     socket.Send(msg);
@@ -266,7 +254,8 @@ namespace ServiceR
                                 }
                             }
                         }
-                        else {
+                        else
+                        {
                             Console.WriteLine("IP Address of " + remoteIP.ToString() + "trying to send connection to computer. Will not read data because it is not expected IP Address from Potts.");
                         }
                         socket.Shutdown(SocketShutdown.Both);
@@ -291,9 +280,9 @@ namespace ServiceR
                 }
 
                 //End Case: This executes once the escape key is pressed
+                Console.WriteLine("Exiting...");
                 client.Disconnect();
                 client.Close();
-
             }
             catch (Exception e)
             {
