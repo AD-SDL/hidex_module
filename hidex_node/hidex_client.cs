@@ -32,7 +32,7 @@ namespace ServiceR
         {
             _server = server;
         }
-        [RestRoute("Get", "/api/test")]
+        [RestRoute("Get", "/state")]
         public async Task Test(IHttpContext context)
         {
 
@@ -127,7 +127,12 @@ namespace ServiceR
                 }
                 response.Add("action_msg", fname);
                 _server.Locals.TryUpdate("firstfname", fname, firstfname);
-                await context.Response.SendResponseAsync(JsonConvert.SerializeObject(response)).ConfigureAwait(false);
+                context.Response.Headers.Add("action_response", "StepStatus.SUCCEEDED");
+                context.Response.Headers.Add("action_log", "");
+                FileStream fs = File.OpenRead(fname);
+                BinaryReader binaryReader = new BinaryReader(fs);
+                var Excelbytes = binaryReader.ReadBytes((int)fs.Length);
+                await context.Response.SendResponseAsync(Excelbytes).ConfigureAwait(false);
                 _server.Locals.TryUpdate("action", false, true);
                 return;
 
