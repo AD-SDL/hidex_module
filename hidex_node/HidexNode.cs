@@ -31,6 +31,9 @@ namespace HidexNode
             server.Stop();
         }
 
+        [Option(Description = "Server Hostname")]
+        public string Server { get; set; } = "wendy.cels.anl.gov";
+
         [Option(Description = "Server Port")]
         public int Port { get; } = 2006;
 
@@ -50,16 +53,29 @@ namespace HidexNode
             InitializeHidexClient();
 
             server = RestServerBuilder.UseDefaults().Build();
-            server.Prefixes.Add("http://localhost:" + Port.ToString() + "/");
+            string server_url = "http://" + Server + ":" + Port.ToString() + "/";
+            Console.WriteLine(server_url);
+            server.Prefixes.Add(server_url);
             server.Locals.TryAdd("state", state);
             server.Locals.TryAdd("client", client);
             server.Locals.TryAdd("output_path", output_path);
             server.Locals.TryAdd("previous_filename", _output_dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName);
-            server.Start();
-
-            Console.WriteLine("Press enter to stop the server");
-            Console.ReadLine();
-        }
+            // Firewall Shenanigans
+            var firewallPolicy = new FirewallPolicy();
+            Console.WriteLine(firewallPolicy.AppExecutablePath);
+            Console.WriteLine(firewallPolicy.Description);
+            Console.WriteLine(firewallPolicy.Name);
+            //server.UseFirewallPolicy(firewallPolicy); // TODO: Figure out why this doesn't work
+            try
+            {
+                server.Start();
+                Console.WriteLine("Press enter to stop the server");
+                Console.ReadLine();
+        } catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+}
         private void InitializeHidexClient()
         {
             // Configuration
