@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Hidex_Csharp_Client.HidexAutomation {
+namespace HidexModule.HidexAutomation {
     using System.Runtime.Serialization;
     
     
@@ -27,7 +27,7 @@ namespace Hidex_Csharp_Client.HidexAutomation {
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    [System.ServiceModel.ServiceContractAttribute(Namespace="http://AurentiaSolutions/HidexSenseAutomation", ConfigurationName="HidexAutomation.IHidexSenseAutomationService", CallbackContract=typeof(Hidex_Csharp_Client.HidexAutomation.IHidexSenseAutomationServiceCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
+    [System.ServiceModel.ServiceContractAttribute(Namespace="http://AurentiaSolutions/HidexSenseAutomation", ConfigurationName="HidexAutomation.IHidexSenseAutomationService", CallbackContract=typeof(HidexModule.HidexAutomation.IHidexSenseAutomationServiceCallback), SessionMode=System.ServiceModel.SessionMode.Required)]
     public interface IHidexSenseAutomationService {
         
         [System.ServiceModel.OperationContractAttribute(IsInitiating=false, Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/CanRun" +
@@ -113,12 +113,12 @@ namespace Hidex_Csharp_Client.HidexAutomation {
         [System.ServiceModel.OperationContractAttribute(IsInitiating=false, Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetSta" +
             "te", ReplyAction="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetSta" +
             "teResponse")]
-        Hidex_Csharp_Client.HidexAutomation.InstrumentState GetState();
+        HidexModule.HidexAutomation.InstrumentState GetState();
         
         [System.ServiceModel.OperationContractAttribute(IsInitiating=false, Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetSta" +
             "te", ReplyAction="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/GetSta" +
             "teResponse")]
-        System.Threading.Tasks.Task<Hidex_Csharp_Client.HidexAutomation.InstrumentState> GetStateAsync();
+        System.Threading.Tasks.Task<HidexModule.HidexAutomation.InstrumentState> GetStateAsync();
         
         [System.ServiceModel.OperationContractAttribute(IsInitiating=false, Action="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/OpenPl" +
             "ateCarrier", ReplyAction="http://AurentiaSolutions/HidexSenseAutomation/IHidexSenseAutomationService/OpenPl" +
@@ -190,12 +190,12 @@ namespace Hidex_Csharp_Client.HidexAutomation {
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public interface IHidexSenseAutomationServiceChannel : Hidex_Csharp_Client.HidexAutomation.IHidexSenseAutomationService, System.ServiceModel.IClientChannel {
+    public interface IHidexSenseAutomationServiceChannel : HidexModule.HidexAutomation.IHidexSenseAutomationService, System.ServiceModel.IClientChannel {
     }
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
-    public partial class HidexSenseAutomationServiceClient : System.ServiceModel.DuplexClientBase<Hidex_Csharp_Client.HidexAutomation.IHidexSenseAutomationService>, Hidex_Csharp_Client.HidexAutomation.IHidexSenseAutomationService {
+    public partial class HidexSenseAutomationServiceClient : System.ServiceModel.DuplexClientBase<HidexModule.HidexAutomation.IHidexSenseAutomationService>, HidexModule.HidexAutomation.IHidexSenseAutomationService {
         
         public HidexSenseAutomationServiceClient(System.ServiceModel.InstanceContext callbackInstance) : 
                 base(callbackInstance) {
@@ -281,11 +281,11 @@ namespace Hidex_Csharp_Client.HidexAutomation {
             return base.Channel.GetInterfaceVersionAsync();
         }
         
-        public Hidex_Csharp_Client.HidexAutomation.InstrumentState GetState() {
+        public HidexModule.HidexAutomation.InstrumentState GetState() {
             return base.Channel.GetState();
         }
         
-        public System.Threading.Tasks.Task<Hidex_Csharp_Client.HidexAutomation.InstrumentState> GetStateAsync() {
+        public System.Threading.Tasks.Task<HidexModule.HidexAutomation.InstrumentState> GetStateAsync() {
             return base.Channel.GetStateAsync();
         }
         
