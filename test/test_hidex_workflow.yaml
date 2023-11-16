@@ -1,0 +1,31 @@
+name: Test Tecan
+metadata:
+  author: Doga Ozgulbas, Ryan D. Lewis
+  info: Test workflow for Tecan
+  version: 0.1
+
+modules:
+  - name: hidex
+
+flowdef:
+  - name: Open Hidex
+    module: hidex
+    action: open
+    args:
+      protocol_file_path: ../README.md
+    checks: null
+    comment: Open Hidex
+
+  - name: Close Hidex
+    module: hidex
+    action: close
+    checks: null
+    comment: Close Hidex
+
+  - name: Plate Assay
+    module: hidex
+    action: run_assay
+    args:
+      assay_name: "Absorbance"
+    checks: null
+    comment: Run Hidex Plate Assay
