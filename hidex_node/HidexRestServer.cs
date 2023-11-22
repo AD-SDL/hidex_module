@@ -1,10 +1,11 @@
 ﻿using Grapevine;
-using HidexModule.HidexAutomation;
+using HidexNode.HidexAutomation;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HidexNode
@@ -12,7 +13,7 @@ namespace HidexNode
     [RestResource]
     public class HidexRestServer
     {
-        private IRestServer _server;
+        private readonly IRestServer _server;
 
         public HidexRestServer(IRestServer server)
         {
@@ -23,8 +24,11 @@ namespace HidexNode
         public async Task State(IHttpContext context)
         {
             string state = _server.Locals.GetAs<string>("state");
-            Dictionary<string, string> response = new Dictionary<string, string>();
-            response["State"] = state;
+            Dictionary<string, string> response = new Dictionary<string, string>
+            {
+                ["State"] = state
+            };
+            Console.WriteLine(state);
             await context.Response.SendResponseAsync(JsonConvert.SerializeObject(response));
         }
 
@@ -45,12 +49,9 @@ namespace HidexNode
         [RestRoute("Post", "/action")]
         public async Task Action(IHttpContext context)
         {
-
-            string action_handle;
-            string action_vars;
-            context.Request.PathParameters.TryGetValue("action_handle", out action_handle);
-            context.Request.PathParameters.TryGetValue("action_vars", out action_vars);
-            Dictionary<string, string> args = JsonConvert.DeserializeObject(action_vars) as Dictionary<string, string>;
+            string action_handle = context.Request.QueryString["action_handle"];
+            string action_vars = context.Request.QueryString["action_vars"];
+            Dictionary<string, string> args = JsonConvert.DeserializeObject<Dictionary<string, string>>(action_vars);
             var result = UtilityFunctions.action_response();
             string state = _server.Locals.GetAs<string>("state");
             HidexSenseAutomationServiceClient client = _server.Locals.GetAs<HidexSenseAutomationServiceClient>("client");
@@ -66,11 +67,14 @@ namespace HidexNode
                 switch (action_handle)
                 {
                     case "open":
+                        Console.WriteLine("Action Started: open");
                         client.OpenPlateCarrier();
                         while (client.GetState() == InstrumentState.Busy) ;
                         result = UtilityFunctions.action_response(StepStatus.SUCCEEDED, "Opened Hidex", "");
+                        Console.WriteLine("Action Finished: open");
                         break;
                     case "run_assay":
+                        Console.WriteLine("Action Started: run_assay");
                         string output_path = _server.Locals.GetAs<string>("output_path");
                         DirectoryInfo output_dir = new DirectoryInfo(output_path);
                         string previous_filename = _server.Locals.GetAs<string>("previous_filename");
@@ -83,19 +87,33 @@ namespace HidexNode
                             filename = output_dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
                         }
                         _server.Locals.TryUpdate("previous_filename", filename, previous_filename);
-                        context.Response.Headers.Add("x-wei-action_response", "StepStatus.SUCCEEDED");
+                        context.Response.Headers.Add("x-wei-action_response", StepStatus.SUCCEEDED);
                         context.Response.Headers.Add("x-wei-action_log", "");
                         context.Response.Headers.Add("x-wei-action_msg", filename);
-                        FileStream fs = File.OpenRead(filename);
-                        BinaryReader binaryReader = new BinaryReader(fs);
-                        var Excelbytes = binaryReader.ReadBytes((int)fs.Length);
-                        _server.Locals.TryUpdate("state", ModuleStatus.IDLE, _server.Locals.GetAs<string>("state"));
-                        await context.Response.SendResponseAsync(Excelbytes);
-                        break;
+                        FileStream fs;
+                        while (true)
+                        {
+                            try
+                            {
+                                fs = File.OpenRead(filename);
+                                BinaryReader binaryReader = new BinaryReader(fs);
+                                var Excelbytes = binaryReader.ReadBytes((int)fs.Length);
+                                _server.Locals.TryUpdate("state", ModuleStatus.IDLE, _server.Locals.GetAs<string>("state"));
+                                Console.WriteLine("Action Finished: run_assay");
+                                await context.Response.SendResponseAsync(Excelbytes);
+                                return;
+                            }
+                            catch (IOException)
+                            {
+                                Thread.Sleep(1000);
+                            }
+                        }
                     case "close":
+                        Console.WriteLine("Action Started: close");
                         client.ClosePlateCarrier();
                         while (client.GetState() == InstrumentState.Busy) ;
                         result = UtilityFunctions.action_response(StepStatus.SUCCEEDED, "Closed Hidex", "");
+                        Console.WriteLine("Action Finished: close");
                         break;
                     default:
                         Console.WriteLine("Unknown action: " + action_handle);

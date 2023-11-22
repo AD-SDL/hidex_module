@@ -1,5 +1,5 @@
 ﻿using Grapevine;
-using HidexModule.HidexAutomation;
+using HidexNode.HidexAutomation;
 using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.IO;
@@ -32,13 +32,16 @@ namespace HidexNode
         }
 
         [Option(Description = "Server Hostname")]
-        public string Server { get; set; } = "wendy.cels.anl.gov";
+        public string Hostname { get; set; } = "+";
 
         [Option(Description = "Server Port")]
-        public int Port { get; } = 2006;
+        public int Port { get; } = 2005;
 
         [Option(Description = "Output Directory")]
-        public String output_path { get; } = "C:\\labautomation\\data_wei\\proc";
+        public String OutputPath { get; } = "C:\\labautomation\\data_wei\\proc";
+
+        [Option(Description = "Whether or not to simulate the instrument (note: if the instrument is connected, this does nothing)")]
+        public bool Simulate { get; } = true;
 
 
         public string state = ModuleStatus.INIT;
@@ -48,34 +51,30 @@ namespace HidexNode
 
         private void OnExecute()
         {
-            _output_dir = new DirectoryInfo(output_path);
+            _output_dir = new DirectoryInfo(OutputPath);
 
             InitializeHidexClient();
 
             server = RestServerBuilder.UseDefaults().Build();
-            string server_url = "http://" + Server + ":" + Port.ToString() + "/";
+            string server_url = "http://" + Hostname + ":" + Port.ToString() + "/";
             Console.WriteLine(server_url);
+            server.Prefixes.Clear();
             server.Prefixes.Add(server_url);
             server.Locals.TryAdd("state", state);
             server.Locals.TryAdd("client", client);
-            server.Locals.TryAdd("output_path", output_path);
+            server.Locals.TryAdd("output_path", OutputPath);
             server.Locals.TryAdd("previous_filename", _output_dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName);
-            // Firewall Shenanigans
-            var firewallPolicy = new FirewallPolicy();
-            Console.WriteLine(firewallPolicy.AppExecutablePath);
-            Console.WriteLine(firewallPolicy.Description);
-            Console.WriteLine(firewallPolicy.Name);
-            //server.UseFirewallPolicy(firewallPolicy); // TODO: Figure out why this doesn't work
             try
             {
                 server.Start();
                 Console.WriteLine("Press enter to stop the server");
                 Console.ReadLine();
-        } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
-}
+        }
         private void InitializeHidexClient()
         {
             // Configuration
@@ -96,7 +95,7 @@ namespace HidexNode
                 remoteAddress
             );
             InstrumentState s;
-            client.Connect(false);
+            client.Connect(Simulate);
             s = client.GetState();
             Console.Write("Hidex Client State: ");
             Console.WriteLine(s);
