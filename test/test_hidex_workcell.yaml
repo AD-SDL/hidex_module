@@ -15,7 +15,7 @@ modules:
     model: hidex_platereader
     interface: wei_rest_node
     config:
-      rest_node_address: "http://wendy.cels.anl.gov:2006"
+      rest_node_address: "http://wendy.cels.anl.gov:2005"
     workcell_coordinates: [0, 0, 0, 0, 0, 0]
 
 locations: {}

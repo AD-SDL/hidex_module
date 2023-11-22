@@ -1,7 +1,7 @@
-name: Test Tecan
+name: Test Hidex
 metadata:
   author: Doga Ozgulbas, Ryan D. Lewis
-  info: Test workflow for Tecan
+  info: Test workflow for Hidex
   version: 0.1
 
 modules:
@@ -11,8 +11,6 @@ flowdef:
   - name: Open Hidex
     module: hidex
     action: open
-    args:
-      protocol_file_path: ../README.md
     checks: null
     comment: Open Hidex
 
