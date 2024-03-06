@@ -36,7 +36,21 @@ namespace HidexNode
         public async Task About(IHttpContext context)
         {
             // TODO
-            await context.Response.SendResponseAsync("about");
+            await context.Response.SendResponseAsync(@"
+{
+    ""name"":""Hidex"",
+    ""model"":""Hidex Sense Microplate Reader"",
+    ""interface"":""wei_rest_node"",
+    ""version"":""0.2.0"",
+    ""description"":""Module for automating the hidex platereader."",
+    ""actions"": [
+        {""name"":""open"",""args"":[],""files"":[]},
+        {""name"":""close"",""args"":[],""files"":[]},
+        {""name"":""run_assay"",""args"":[{""name"":""assay_name"",""type"":""str"",""default"":null,""required"":true,""description"":""Name of the assay to run""}],""files"":[]}
+    ],
+    ""resource_pools"":[]
+}"
+            );
         }
 
         [RestRoute("Get", "/resources")]
