@@ -96,32 +96,41 @@ namespace HidexNode
                         client.StartAssay(args["assay_name"]);
                         while (client.GetState() == InstrumentState.Busy) ;
                         string filename = output_dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
-                        while (filename == previous_filename)
+                        string wait_until_complete_string = "true";
+                        if (args.TryGetValue("wait_until_complete", out wait_until_complete_string) && wait_until_complete_string.ToLower() != "true")
                         {
-                            filename = output_dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
+                            result = UtilityFunctions.action_response(StepStatus.SUCCEEDED, "Ran Assay", "");
                         }
-                        _server.Locals.TryUpdate("previous_filename", filename, previous_filename);
-                        context.Response.Headers.Add("x-wei-action_response", StepStatus.SUCCEEDED);
-                        context.Response.Headers.Add("x-wei-action_log", "");
-                        context.Response.Headers.Add("x-wei-action_msg", filename);
-                        FileStream fs;
-                        while (true)
+                        else
                         {
-                            try
+                            while (filename == previous_filename)
                             {
-                                fs = File.OpenRead(filename);
-                                BinaryReader binaryReader = new BinaryReader(fs);
-                                var Excelbytes = binaryReader.ReadBytes((int)fs.Length);
-                                _server.Locals.TryUpdate("state", ModuleStatus.IDLE, _server.Locals.GetAs<string>("state"));
-                                Console.WriteLine("Action Finished: run_assay");
-                                await context.Response.SendResponseAsync(Excelbytes);
-                                return;
+                                filename = output_dir.GetFiles().OrderByDescending(f => f.LastWriteTime).First().FullName;
                             }
-                            catch (IOException)
+                            _server.Locals.TryUpdate("previous_filename", filename, previous_filename);
+                            context.Response.Headers.Add("x-wei-action_response", StepStatus.SUCCEEDED);
+                            context.Response.Headers.Add("x-wei-action_log", "");
+                            context.Response.Headers.Add("x-wei-action_msg", filename);
+                            FileStream fs;
+                            while (true)
                             {
-                                Thread.Sleep(1000);
+                                try
+                                {
+                                    fs = File.OpenRead(filename);
+                                    BinaryReader binaryReader = new BinaryReader(fs);
+                                    var Excelbytes = binaryReader.ReadBytes((int)fs.Length);
+                                    _server.Locals.TryUpdate("state", ModuleStatus.IDLE, _server.Locals.GetAs<string>("state"));
+                                    Console.WriteLine("Action Finished: run_assay");
+                                    await context.Response.SendResponseAsync(Excelbytes);
+                                    return;
+                                }
+                                catch (IOException)
+                                {
+                                    Thread.Sleep(1000);
+                                }
                             }
                         }
+                        break;
                     case "close":
                         Console.WriteLine("Action Started: close");
                         client.ClosePlateCarrier();
