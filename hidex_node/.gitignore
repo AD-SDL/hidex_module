@@ -370,6 +370,9 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+#Connected Services
+Connected\ Services/
+
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
