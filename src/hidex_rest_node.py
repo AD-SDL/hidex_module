@@ -4,7 +4,7 @@
 REST-based node that interfaces with WEI and provides various fake actions for testing purposes
 """
 import clr
-clr.AddReference("C:\\Users\\svcaibio\\\Dev\\hidex_module\\hidex_node\\bin\\Debug\\HidexNode.dll")
+clr.AddReference("C:\\Users\\rpl\\\source\\repos\\hidex_module\\hidex_node\\bin\\Debug\\HidexNode.dll")
 import System.ServiceModel as SM
 import System.ServiceModel.Channels as SMC
 import HidexNode.HidexAutomation as HA
@@ -69,6 +69,7 @@ def test_node_startup(state: State):
         time.sleep(0.5)
     print(t.GetState())
     state.client = t
+    state.cancelled = False
 
 
 @hidex_rest_node.state_handler()
@@ -120,11 +121,10 @@ def run_assay(state: State, action: ActionRequest,
     prev_file = latest_file
     print(latest_file)
     state.client.SetAutoExportPath(state.output_path)
-    state.prev
     state.client.StartAssay(assay_name)
     while state.client.GetState() == HA.InstrumentState.Busy:
         pass
-    if bool(wait_for_result):
+    if bool(wait_for_result) and not state.cancelled:
         while latest_file == prev_file:
             list_of_files = glob.glob(state.output_path +'\\*') # * means all if need specific format then *.csv
             latest_file = max(list_of_files, key=os.path.getctime)
@@ -134,7 +134,14 @@ def run_assay(state: State, action: ActionRequest,
             files={"assay_result": latest_file},
         )
     else:
+        state.cancelled = False
         return StepSucceeded()
+
+@hidex_rest_node.cancel()
+def cancel(state: State):
+    state.client.StopAssay()
+    state.cancelled = True
+    state.status = ModuleStatus.IDLE
 
 @hidex_rest_node.shutdown()
 def shutdown(state: State):
