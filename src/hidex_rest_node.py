@@ -8,7 +8,8 @@ clr.AddReference("C:\\Users\\rpl\\\\source\\repos\\hidex_module\\src\\hidex_inte
 import glob
 import os
 import time
-from typing import Annotated
+from typing import Optional, Union
+from typing_extensions import Annotated
 
 import HidexNode as HN
 import HidexNode.HidexAutomation as HA
@@ -16,6 +17,17 @@ import System
 import System.ServiceModel as SM
 import System.ServiceModel.Channels as SMC
 from fastapi.datastructures import State
+
+
+from madsci.client.resource_client import ResourceClient
+from madsci.common.types.action_types import ActionFailed, ActionSucceeded
+from madsci.common.types.admin_command_types import AdminCommandResponse
+from madsci.common.types.auth_types import OwnershipInfo
+from madsci.common.types.location_types import LocationArgument
+from madsci.common.types.node_types import RestNodeConfig
+from madsci.node_module.helpers import action
+from madsci.node_module.rest_node_module import RestNode
+
 from wei.modules.rest_module import RESTModule
 from wei.types import StepFileResponse, StepResponse, StepStatus
 from wei.types.module_types import (
@@ -25,9 +37,75 @@ from wei.types.module_types import (
 )
 from wei.types.step_types import ActionRequest, StepSucceeded
 
-# * Test predefined action functions
 
+class HidexNodeConfig(RestNodeConfig):
+    """Configuration for the Hidex REST node"""
 
+    output_path: Optional[str] = "C:\\Users\\rpl\\Desktop\\results"
+
+class HidexNode(RestNode):
+    """Hidex Node class for managing the Hidex plate reader"""
+    hidex_interface: HA.HidexSenseAutomationServiceClient = None
+    config_model = HidexNodeConfig
+
+    def startup_handler(self) -> None:
+        """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
+        try: 
+            if self.config.resource_server_url:
+                self.resource_client = ResourceClient(self.config.resource_server_url)
+                self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
+            else:
+                self.resource_client = None
+            self.logger.log("Node initializing...")
+
+            sbe = SMC.ReliableSessionBindingElement()
+            binding = SMC.CustomBinding()
+            binding.Elements.Add(sbe)
+            binding.Elements.Add(SMC.BinaryMessageEncodingBindingElement())
+            binding.Elements.Add(SMC.NamedPipeTransportBindingElement())
+            self.hidex_interface = HA.HidexSenseAutomationServiceClient(
+                SM.InstanceContext(HN.Callback_Wrapper()),
+                binding,
+                SM.EndpointAddress(System.Uri("net.pipe://localhost/HidexSenseAutomation/")),
+            )
+            self.hidex_interface.Connect(False)
+            state = self.hidex_interface.GetState()
+            print(self.hidex_interface.GetState() == state)
+            while self.hidex_interface.GetState() == state:
+                print(self.hidex_interface.GetState())
+                time.sleep(0.5)
+            print(self.hidex_interface.GetState())
+            self.cancelled = False
+
+        except Exception as err:
+            self.logger.log_error(f"Error starting the Hidex Node: {err}")
+            self.startup_has_run = False
+        else:
+            self.startup_has_run = True
+            self.logger.log("Hidex node initialized!")
+
+    def state_handler(self) -> None:
+        """Handles the state of the Hidex node"""
+        if not self.hidex_interface:
+            self.logger.log_error("Hidex interface is not initialized")
+            return
+
+        if self.hidex_interface.GetState() == HA.InstrumentState.Idle:
+            self.node_state = {
+                "hidex_status_code": "READY",
+            }
+        elif self.hidex_interface.GetState() == HA.InstrumentState.Busy:
+            self.node_state = {
+                "hidex_status_code": "BUSY",
+            }
+            self.logger.info("BUSY")
+        else:
+            self.node_state = {
+                "hidex_status_code": "UNKNOWN",
+            }
+            self.logger.info("UNKNOWN")
+            
+#_#_#_OLD_CODE_#_#_#
 hidex_rest_node = RESTModule(
     name="hidex_node",
     description="A module to control the Hidex plate reader",
@@ -35,12 +113,6 @@ hidex_rest_node = RESTModule(
     resource_pools=[],
     model="Hidex",
     actions=[],
-)
-hidex_rest_node.arg_parser.add_argument(
-    "--output_path",
-    type=str,
-    help="The starting amount of foo",
-    default="C:\\Users\\rpl\\Desktop\\results",
 )
 
 
@@ -66,17 +138,6 @@ def test_node_startup(state: State):
     print(t.GetState())
     state.client = t
     state.cancelled = False
-
-
-@hidex_rest_node.state_handler()
-def state_handler(state: State) -> ModuleState:
-    """Handles the state of the module"""
-    if state.client.GetState() == HA.InstrumentState.Idle:
-        state.status = ModuleStatus.IDLE
-    elif state.client.GetState() == HA.InstrumentState.Busy:
-        state.status = ModuleStatus.BUSY
-    return ModuleState(status=state.status)
-
 
 @hidex_rest_node.action()
 def open(
