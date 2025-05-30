@@ -2,40 +2,28 @@
 REST-based node that interfaces with WEI and provides various fake actions for testing purposes
 """
 
-import clr
-
-clr.AddReference("C:\\Users\\rpl\\\\source\\repos\\hidex_module\\src\\hidex_interface\\bin\\Debug\\HidexNode.dll")
 import glob
 import os
 import time
-from typing import Optional, Union
+from typing import Optional
+
+import clr
+from madsci.client.resource_client import ResourceClient
+from madsci.common.types.action_types import ActionFailed, ActionSucceeded
+from madsci.common.types.admin_command_types import AdminCommandResponse
+from madsci.common.types.auth_types import OwnershipInfo
+from madsci.common.types.node_types import RestNodeConfig
+from madsci.node_module.helpers import action
+from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
 
+clr.AddReference("C:\\Users\\rpl\\\\source\\repos\\hidex_module\\src\\hidex_interface\\bin\\Debug\\HidexNode.dll")
+# ruff: noqa: E402
 import HidexNode as HN
 import HidexNode.HidexAutomation as HA
 import System
 import System.ServiceModel as SM
 import System.ServiceModel.Channels as SMC
-from fastapi.datastructures import State
-
-
-from madsci.client.resource_client import ResourceClient
-from madsci.common.types.action_types import ActionFailed, ActionSucceeded
-from madsci.common.types.admin_command_types import AdminCommandResponse
-from madsci.common.types.auth_types import OwnershipInfo
-from madsci.common.types.location_types import LocationArgument
-from madsci.common.types.node_types import RestNodeConfig
-from madsci.node_module.helpers import action
-from madsci.node_module.rest_node_module import RestNode
-
-from wei.modules.rest_module import RESTModule
-from wei.types import StepFileResponse, StepResponse, StepStatus
-from wei.types.module_types import (
-    LocalFileModuleActionResult,
-    ModuleState,
-    ModuleStatus,
-)
-from wei.types.step_types import ActionRequest, StepSucceeded
 
 
 class HidexNodeConfig(RestNodeConfig):
@@ -43,14 +31,16 @@ class HidexNodeConfig(RestNodeConfig):
 
     output_path: Optional[str] = "C:\\Users\\rpl\\Desktop\\results"
 
+
 class HidexNode(RestNode):
     """Hidex Node class for managing the Hidex plate reader"""
+
     hidex_interface: HA.HidexSenseAutomationServiceClient = None
     config_model = HidexNodeConfig
 
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
-        try: 
+        try:
             if self.config.resource_server_url:
                 self.resource_client = ResourceClient(self.config.resource_server_url)
                 self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
@@ -84,6 +74,18 @@ class HidexNode(RestNode):
             self.startup_has_run = True
             self.logger.log("Hidex node initialized!")
 
+    def shutdown_handler(self):
+        """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
+        try:
+            self.logger.log("Shutting down")
+            self.hidex_interface.Disconnect()
+            self.shutdown_has_run = True
+            del self.ur_interface
+            self.hidex_interface = None
+            self.logger.log("Hidex node shutdown successfully!")
+        except Exception as err:
+            self.logger.log_error(f"Error shutting down the Hidex Node: {err}")
+
     def state_handler(self) -> None:
         """Handles the state of the Hidex node"""
         if not self.hidex_interface:
@@ -104,110 +106,70 @@ class HidexNode(RestNode):
                 "hidex_status_code": "UNKNOWN",
             }
             self.logger.info("UNKNOWN")
-            
-#_#_#_OLD_CODE_#_#_#
-hidex_rest_node = RESTModule(
-    name="hidex_node",
-    description="A module to control the Hidex plate reader",
-    version="1.0.0",
-    resource_pools=[],
-    model="Hidex",
-    actions=[],
-)
 
+    @action(name="open", description="opens plate carrier")
+    def open(self):
+        """Opens the plate carrier"""
+        try:
+            self.hidex_interface.OpenPlateCarrier()
+            time.sleep(1)
+        except Exception as e:
+            self.logger.log_error(f"Error opening plate carrier: {e}")
+            return ActionFailed(errors=e)
+        return ActionSucceeded()
 
-@hidex_rest_node.startup()
-def test_node_startup(state: State):
-    """Initializes the module"""
-    sbe = SMC.ReliableSessionBindingElement()
-    binding = SMC.CustomBinding()
-    binding.Elements.Add(sbe)
-    binding.Elements.Add(SMC.BinaryMessageEncodingBindingElement())
-    binding.Elements.Add(SMC.NamedPipeTransportBindingElement())
-    t = HA.HidexSenseAutomationServiceClient(
-        SM.InstanceContext(HN.Callback_Wrapper()),
-        binding,
-        SM.EndpointAddress(System.Uri("net.pipe://localhost/HidexSenseAutomation/")),
-    )
-    t.Connect(False)
-    c = t.GetState()
-    print(t.GetState() == c)
-    while t.GetState() == c:
-        print(t.GetState())
-        time.sleep(0.5)
-    print(t.GetState())
-    state.client = t
-    state.cancelled = False
+    @action(name="close", description="closes plate carrier")
+    def close(self):
+        """Closes the plate carrier"""
+        try:
+            self.hidex_interface.ClosePlateCarrier()
+            time.sleep(1)
+        except Exception as e:
+            self.logger.log_error(f"Error closing plate carrier: {e}")
+            return ActionFailed(errors=e)
+        return ActionSucceeded()
 
-@hidex_rest_node.action()
-def open(
-    state: State,
-    action: ActionRequest,
-) -> StepResponse:
-    """opens plate carrier"""
-    state.client.OpenPlateCarrier()
-    time.sleep(1)
-    return StepResponse.step_succeeded()
+    @action(name="run_assay", description="runs assay on the current sample")
+    def run_assay(
+        self,
+        assay_name: Annotated[str, "assay to run"],
+        wait_for_result: Annotated[bool, "Whether we should wait for the results of the assay before returning"] = True,
+    ):
+        """Runs assay on the current sample"""
 
+        list_of_files = glob.glob(self.config.output_path + "\\*")  # * means all if need specific format then *.csv
+        latest_file = max(list_of_files, key=os.path.getctime)
+        prev_file = latest_file
+        self.logger.log_info(latest_file)
+        self.hidex_interface.SetAutoExportPath(self.config.output_path)
+        self.hidex_interface.StartAssay(assay_name)
+        while self.hidex_interface.GetState() == HA.InstrumentState.Busy:
+            pass
+        if bool(wait_for_result) and not self.cancelled:
+            while latest_file == prev_file:
+                list_of_files = glob.glob(
+                    self.config.output_path + "\\*"
+                )  # * means all if need specific format then *.csv
+                latest_file = max(list_of_files, key=os.path.getctime)
+                time.sleep(0.5)
+            return ActionSucceeded(files={"assay_result": latest_file})
+        else:
+            self.cancelled = False
+            return ActionSucceeded()
 
-@hidex_rest_node.action()
-def close(
-    state: State,
-    action: ActionRequest,
-) -> StepResponse:
-    """closes plate carrier"""
-    state.client.ClosePlateCarrier()
-    time.sleep(1)
-    return StepResponse.step_succeeded()
-
-
-@hidex_rest_node.action(
-    name="run_assay",
-    results=[
-        LocalFileModuleActionResult(label="assay_result", description="result file from the assay"),
-    ],
-)
-def run_assay(
-    state: State,
-    action: ActionRequest,
-    assay_name: Annotated[str, "assay to run"],
-    wait_for_result: Annotated[bool, "Whether we should wait for the results of the assay before returning"] = True,
-) -> StepFileResponse:
-    """runs assay on the current sample"""
-
-    list_of_files = glob.glob(state.output_path + "\\*")  # * means all if need specific format then *.csv
-    latest_file = max(list_of_files, key=os.path.getctime)
-    prev_file = latest_file
-    print(latest_file)
-    state.client.SetAutoExportPath(state.output_path)
-    state.client.StartAssay(assay_name)
-    while state.client.GetState() == HA.InstrumentState.Busy:
-        pass
-    if bool(wait_for_result) and not state.cancelled:
-        while latest_file == prev_file:
-            list_of_files = glob.glob(state.output_path + "\\*")  # * means all if need specific format then *.csv
-            latest_file = max(list_of_files, key=os.path.getctime)
-            time.sleep(0.5)
-        return StepFileResponse(
-            StepStatus.SUCCEEDED,
-            files={"assay_result": latest_file},
-        )
-    else:
-        state.cancelled = False
-        return StepSucceeded()
-
-
-@hidex_rest_node.cancel()
-def cancel(state: State):
-    state.client.StopAssay()
-    state.cancelled = True
-    state.status = ModuleStatus.IDLE
-
-
-@hidex_rest_node.shutdown()
-def shutdown(state: State):
-    state.client.Disconnect()
+    def cancel(self) -> AdminCommandResponse:
+        """Cancels the current assay"""
+        try:
+            self.hidex_interface.StopAssay()
+            self.cancelled = True
+            return AdminCommandResponse(
+                success=True,
+            )
+        except Exception as e:
+            self.logger.log_error(f"Error cancelling assay: {e}")
+            return AdminCommandResponse(success=False, errors=[e])
 
 
 if __name__ == "__main__":
-    hidex_rest_node.start()
+    hidex_node = HidexNode()
+    hidex_node.start_node()
