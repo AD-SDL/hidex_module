@@ -5,6 +5,7 @@ REST-based node that interfaces with WEI and provides various fake actions for t
 import glob
 import os
 import time
+from pathlib import Path
 from typing import Optional
 
 import clr
@@ -17,7 +18,9 @@ from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
 
-clr.AddReference("C:\\Users\\rpl\\\\source\\repos\\hidex_module\\src\\hidex_interface\\bin\\Debug\\HidexNode.dll")
+library_path = Path(__file__).parent
+dll_path = library_path / "hidex_interface/bin/Debug/HidexNode.dll"
+clr.AddReference(str(dll_path))
 # ruff: noqa: E402
 import HidexNode as HN
 import HidexNode.HidexAutomation as HA
@@ -152,6 +155,8 @@ class HidexNode(RestNode):
                 )  # * means all if need specific format then *.csv
                 latest_file = max(list_of_files, key=os.path.getctime)
                 time.sleep(0.5)
+            while os.path.getsize(latest_file) == 0:
+                time.sleep(1)
             return ActionSucceeded(files={"assay_result": latest_file})
         else:
             self.cancelled = False
