@@ -5,6 +5,7 @@ REST-based node that interfaces with WEI and provides various fake actions for t
 import glob
 import os
 import time
+from pathlib import Path
 from typing import Optional
 
 import clr
@@ -16,10 +17,9 @@ from madsci.common.types.node_types import RestNodeConfig
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
-from pathlib import Path
 
 library_path = Path(__file__).parent
-dll_path = library_path / "hidex_interface/bin/Debug/HidexNode.dll" 
+dll_path = library_path / "hidex_interface/bin/Debug/HidexNode.dll"
 clr.AddReference(str(dll_path))
 # ruff: noqa: E402
 import HidexNode as HN
