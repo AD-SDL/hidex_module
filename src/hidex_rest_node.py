@@ -2,101 +2,87 @@
 REST-based node that interfaces with WEI and provides various fake actions for testing purposes
 """
 
-import glob
 import os
 import time
-from typing import Optional
+from pathlib import Path, WindowsPath
+from typing import Annotated, Optional
 
 import clr
 from madsci.client.resource_client import ResourceClient
-from madsci.common.types.action_types import ActionFailed, ActionSucceeded
+from madsci.common.types.action_types import ActionCancelled, ActionFailed, ActionResult, ActionSucceeded
 from madsci.common.types.admin_command_types import AdminCommandResponse
 from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.node_types import RestNodeConfig
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
-from typing_extensions import Annotated
 
-clr.AddReference("C:\\Users\\rpl\\\\source\\repos\\hidex_module\\src\\hidex_interface\\bin\\Debug\\HidexNode.dll")
-# ruff: noqa: E402
-import HidexNode as HN
-import HidexNode.HidexAutomation as HA
-import System
-import System.ServiceModel as SM
-import System.ServiceModel.Channels as SMC
+clr.AddReference(str(WindowsPath(__file__).parent / "hidex_interface" / "bin" / "Debug" / "HidexInterface.dll"))
+import HidexInterface  # type: ignore  # noqa: E402, I001
+import HidexInterface.HidexService as HidexService # type: ignore  # noqa: E402, PLR0402
+import System # type: ignore  # noqa: E402
+from System import ServiceModel  # type: ignore # noqa: E402
+from System.ServiceModel import Channels  # type: ignore # noqa: E402
 
 
 class HidexNodeConfig(RestNodeConfig):
     """Configuration for the Hidex REST node"""
 
-    output_path: Optional[str] = "C:\\Users\\rpl\\Desktop\\results"
+    output_path: Optional[str] = "C:\\Users\\svcaibio\\Desktop\\results"
+    """Path where the Hidex saves assay results"""
 
 
 class HidexNode(RestNode):
     """Hidex Node class for managing the Hidex plate reader"""
 
-    hidex_interface: HA.HidexSenseAutomationServiceClient = None
+    hidex_interface: HidexService.HidexSenseAutomationServiceClient = None
+    """Interface to the Hidex plate reader service"""
     config_model = HidexNodeConfig
+    """Configuration model used by the Hidex Node"""
+    config: HidexNodeConfig = HidexNodeConfig()
+    """Configuration for the Hidex Node"""
+    module_version = "1.1.0"
+    """Version of the Hidex Node module"""
 
     def startup_handler(self) -> None:
-        """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
-        try:
-            if self.config.resource_server_url:
-                self.resource_client = ResourceClient(self.config.resource_server_url)
-                self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
-            else:
-                self.resource_client = None
-            self.logger.log("Node initializing...")
+        """Called to (re)initialize the node. Opens a connection to the Hidex."""
 
-            sbe = SMC.ReliableSessionBindingElement()
-            binding = SMC.CustomBinding()
-            binding.Elements.Add(sbe)
-            binding.Elements.Add(SMC.BinaryMessageEncodingBindingElement())
-            binding.Elements.Add(SMC.NamedPipeTransportBindingElement())
-            self.hidex_interface = HA.HidexSenseAutomationServiceClient(
-                SM.InstanceContext(HN.Callback_Wrapper()),
-                binding,
-                SM.EndpointAddress(System.Uri("net.pipe://localhost/HidexSenseAutomation/")),
-            )
-            self.hidex_interface.Connect(False)
-            state = self.hidex_interface.GetState()
-            print(self.hidex_interface.GetState() == state)
-            while self.hidex_interface.GetState() == state:
-                print(self.hidex_interface.GetState())
-                time.sleep(0.5)
-            print(self.hidex_interface.GetState())
-            self.cancelled = False
+        sbe = Channels.ReliableSessionBindingElement()
+        binding = Channels.CustomBinding()
+        binding.Elements.Add(sbe)
+        binding.Elements.Add(Channels.BinaryMessageEncodingBindingElement())
+        binding.Elements.Add(Channels.NamedPipeTransportBindingElement())
+        self.hidex_interface = HidexService.HidexSenseAutomationServiceClient(
+            ServiceModel.InstanceContext(HidexInterface.Callback_Wrapper()),
+            binding,
+            ServiceModel.EndpointAddress(System.Uri("net.pipe://localhost/HidexSenseAutomation/")),
+        )
+        self.hidex_interface.Connect(False)
+        state = self.hidex_interface.GetState()
+        self.logger.log_debug(self.hidex_interface.GetState() == state)
+        while self.hidex_interface.GetState() == state:
+            self.logger.log_debug(self.hidex_interface.GetState())
+            time.sleep(0.5)
+        self.logger.log_debug(self.hidex_interface.GetState())
+        self.cancelled = False
+        self.logger.log("Hidex node initialized!")
 
-        except Exception as err:
-            self.logger.log_error(f"Error starting the Hidex Node: {err}")
-            self.startup_has_run = False
-        else:
-            self.startup_has_run = True
-            self.logger.log("Hidex node initialized!")
-
-    def shutdown_handler(self):
+    def shutdown_handler(self) -> None:
         """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
-        try:
-            self.logger.log("Shutting down")
-            self.hidex_interface.Disconnect()
-            self.shutdown_has_run = True
-            del self.ur_interface
-            self.hidex_interface = None
-            self.logger.log("Hidex node shutdown successfully!")
-        except Exception as err:
-            self.logger.log_error(f"Error shutting down the Hidex Node: {err}")
+        self.logger.log("Shutting down")
+        self.hidex_interface.Disconnect()
+        self.hidex_interface = None
+        self.logger.log("Hidex node shutdown successfully!")
 
     def state_handler(self) -> None:
         """Handles the state of the Hidex node"""
-        if not self.hidex_interface:
-            self.logger.log_error("Hidex interface is not initialized")
+        if not self.hidex_interface or self.node_status.initializing:
             return
 
-        if self.hidex_interface.GetState() == HA.InstrumentState.Idle:
+        if self.hidex_interface.GetState() == HidexService.InstrumentState.Idle:
             self.node_state = {
                 "hidex_status_code": "READY",
             }
-        elif self.hidex_interface.GetState() == HA.InstrumentState.Busy:
+        elif self.hidex_interface.GetState() == HidexService.InstrumentState.Busy:
             self.node_state = {
                 "hidex_status_code": "BUSY",
             }
@@ -108,25 +94,17 @@ class HidexNode(RestNode):
             self.logger.info("UNKNOWN")
 
     @action(name="open", description="opens plate carrier")
-    def open(self):
+    def open(self) -> ActionResult:
         """Opens the plate carrier"""
-        try:
-            self.hidex_interface.OpenPlateCarrier()
-            time.sleep(1)
-        except Exception as e:
-            self.logger.log_error(f"Error opening plate carrier: {e}")
-            return ActionFailed(errors=e)
+        self.hidex_interface.OpenPlateCarrier()
+        time.sleep(3)
         return ActionSucceeded()
 
     @action(name="close", description="closes plate carrier")
-    def close(self):
+    def close(self) -> ActionResult:
         """Closes the plate carrier"""
-        try:
-            self.hidex_interface.ClosePlateCarrier()
-            time.sleep(1)
-        except Exception as e:
-            self.logger.log_error(f"Error closing plate carrier: {e}")
-            return ActionFailed(errors=e)
+        self.hidex_interface.ClosePlateCarrier()
+        time.sleep(5)
         return ActionSucceeded()
 
     @action(name="run_assay", description="runs assay on the current sample")
@@ -134,28 +112,29 @@ class HidexNode(RestNode):
         self,
         assay_name: Annotated[str, "assay to run"],
         wait_for_result: Annotated[bool, "Whether we should wait for the results of the assay before returning"] = True,
-    ):
+    ) -> ActionResult:
         """Runs assay on the current sample"""
 
-        list_of_files = glob.glob(self.config.output_path + "\\*")  # * means all if need specific format then *.csv
-        latest_file = max(list_of_files, key=os.path.getctime)
-        prev_file = latest_file
-        self.logger.log_info(latest_file)
+        self.cancelled = False
+        pre_submit_time = time.time()
         self.hidex_interface.SetAutoExportPath(self.config.output_path)
         self.hidex_interface.StartAssay(assay_name)
-        while self.hidex_interface.GetState() == HA.InstrumentState.Busy:
+        while self.hidex_interface.GetState() == HidexService.InstrumentState.Busy:
             pass
-        if bool(wait_for_result) and not self.cancelled:
-            while latest_file == prev_file:
-                list_of_files = glob.glob(
-                    self.config.output_path + "\\*"
-                )  # * means all if need specific format then *.csv
-                latest_file = max(list_of_files, key=os.path.getctime)
-                time.sleep(0.5)
+        if bool(wait_for_result):
+            while not self.cancelled:
+                time.sleep(1)
+                files = list(Path(self.config.output_path).glob("*"))
+                if files:
+                    latest_file = max(files, key=os.path.getctime)
+                    if latest_file.is_file() and latest_file.stat().st_birthtime > pre_submit_time:
+                        break
+            else:
+                self.logger.log_debug("Assay cancelled before completion")
+                return ActionCancelled(errors=["Assay cancelled before completion"])
             return ActionSucceeded(files={"assay_result": latest_file})
-        else:
-            self.cancelled = False
-            return ActionSucceeded()
+        self.cancelled = False
+        return ActionSucceeded()
 
     def cancel(self) -> AdminCommandResponse:
         """Cancels the current assay"""

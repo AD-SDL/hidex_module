@@ -2,14 +2,41 @@
 
 Contains `hidex_node`, providing an interface and adapter that works alongside the Hidex Plate Reader's first party driver to control the instrument.
 
-## Installation Notes
+## Building the C# Solution
 
-To make the server accessible, run the following in a terminal as Administrator
+To use this interface, you must first open `src/hidex_interface/HidexInterface.sln` and build the solution.
 
-```
-netsh http add urlacl url=http://+:2005/ user=<USER> listen=yes delegate=yes
-```
+## Python Installation/Usage
 
-Replace `2005` with the port you intend to use, if it differs from the default, and `<USER>` with the username that will be running the server (you may need to use the form `DOMAIN/USER`)
+This package is Windows-only.
 
-To interface with the module from another device, you'll need to [open up the port](https://www.windowscentral.com/how-open-port-windows-firewall) you intend to run the module's server on (2005 by default).
+### Using virtualenv
+
+1. Open Command Prompt and navigate to the project directory.
+2. Create a virtual environment:
+   ```
+   python -m venv venv
+   ```
+3. Activate the virtual environment:
+   ```
+   venv\Scripts\activate
+   ```
+4. Install the package and dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+### Using pdm
+
+1. Install PDM if you don't have it: https://pdm-project.org/latest/#installation
+2. Navigate to the project directory.
+3. Install dependencies:
+   ```
+   pdm install
+   ```
+4. To start the node:
+   ```
+   pdm run python src/hidex_rest_node.py
+   ```
+
+
