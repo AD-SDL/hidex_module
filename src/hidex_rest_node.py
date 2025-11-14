@@ -11,7 +11,6 @@ import clr
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionCancelled, ActionFailed, ActionResult, ActionSucceeded
 from madsci.common.types.admin_command_types import AdminCommandResponse
-from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.node_types import RestNodeConfig
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
@@ -40,7 +39,7 @@ class HidexNode(RestNode):
     """Configuration model used by the Hidex Node"""
     config: HidexNodeConfig = HidexNodeConfig()
     """Configuration for the Hidex Node"""
-    module_version = "1.1.0"
+    module_version = "1.2.0"
     """Version of the Hidex Node module"""
 
     def startup_handler(self) -> None:
@@ -93,26 +92,26 @@ class HidexNode(RestNode):
             }
             self.logger.info("UNKNOWN")
 
-    @action(name="open", description="opens plate carrier")
-    def open(self) -> ActionResult:
+    @action(name="open", description="Open the plate carrier")
+    def open(self) -> None:
         """Opens the plate carrier"""
         self.hidex_interface.OpenPlateCarrier()
         time.sleep(3)
         return ActionSucceeded()
 
-    @action(name="close", description="closes plate carrier")
-    def close(self) -> ActionResult:
+    @action(name="close", description="Closes the plate carrier")
+    def close(self) -> None:
         """Closes the plate carrier"""
         self.hidex_interface.ClosePlateCarrier()
         time.sleep(5)
         return ActionSucceeded()
 
-    @action(name="run_assay", description="runs assay on the current sample")
+    @action(name="run_assay", description="Runs the specificed assay on the current sample")
     def run_assay(
         self,
-        assay_name: Annotated[str, "assay to run"],
+        assay_name: Annotated[str, "Name of the assay to run"],
         wait_for_result: Annotated[bool, "Whether we should wait for the results of the assay before returning"] = True,
-    ) -> ActionResult:
+    ) -> Optional[Annotated[Path, "The assay result"]]:
         """Runs assay on the current sample"""
 
         self.cancelled = False
