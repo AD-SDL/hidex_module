@@ -38,5 +38,3 @@ This package is Windows-only.
    ```
    pdm run python src/hidex_rest_node.py
    ```
-
-

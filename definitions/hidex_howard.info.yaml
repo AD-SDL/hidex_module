@@ -10,6 +10,7 @@ capabilities:
   get_state: true
   get_status: true
   send_action: true
+  get_action_status: true
   get_action_result: true
   get_action_history: true
   action_files: true
@@ -27,29 +28,37 @@ node_url: null
 actions:
   open:
     name: open
-    description: opens plate carrier
+    description: Open the plate carrier
     args: {}
     locations: {}
     files: {}
     results: {}
     blocking: false
     asynchronous: true
+    accepts_var_args: false
+    accepts_var_kwargs: false
+    var_args_schema: null
+    var_kwargs_schema: null
   close:
     name: close
-    description: closes plate carrier
+    description: Closes the plate carrier
     args: {}
     locations: {}
     files: {}
     results: {}
     blocking: false
     asynchronous: true
+    accepts_var_args: false
+    accepts_var_kwargs: false
+    var_args_schema: null
+    var_kwargs_schema: null
   run_assay:
     name: run_assay
-    description: runs assay on the current sample
+    description: Runs the specificed assay on the current sample
     args:
       assay_name:
         name: assay_name
-        description: assay to run
+        description: Name of the assay to run
         argument_type: str
         required: true
         default: null
@@ -61,18 +70,26 @@ actions:
         default: true
     locations: {}
     files: {}
-    results: {}
+    results:
+      file:
+        result_label: file
+        description: null
+        result_type: file
     blocking: false
     asynchronous: true
+    accepts_var_args: false
+    accepts_var_kwargs: false
+    var_args_schema: null
+    var_kwargs_schema: null
 config:
-  node_definition: definitions/hidex_howard.node.yaml
+  node_definition: C:\\Users\\RPL\\source\\repos\\hidex_module\\definitions\\hidex_howard.node.yaml
   node_info_path: null
   update_node_files: true
   status_update_interval: 2.0
   state_update_interval: 2.0
-  node_url: http://hudson01.cels.anl.gov:2000/
+  node_url: http://suestorm.cels.anl.gov:3000/
   uvicorn_kwargs: {}
-  output_path: C:\Users\svcaibio\Desktop\results
+  output_path: C:\Users\RPL\Desktop\results
 config_schema:
   description: Configuration for the Hidex REST node
   properties:
@@ -132,10 +149,9 @@ config_schema:
       title: Uvicorn Configuration
       type: object
     output_path:
-      anyOf:
-      - type: string
-      - type: 'null'
-      default: C:\Users\svcaibio\Desktop\results
+      default: C:\Users\RPL\Desktop\results
+      format: path
       title: Output Path
+      type: string
   title: HidexNodeConfig
   type: object
