@@ -1,16 +1,16 @@
 """
-REST-based node that interfaces with WEI and provides various fake actions for testing purposes
+MADSci compatible REST node for Hidex Sense Plate Readers.
 """
 
 import os
 import time
 from pathlib import Path, WindowsPath
-from typing import Annotated
+from typing import Annotated, Optional
 
 import clr
 from madsci.common.types.action_types import (
     ActionCancelled,
-    ActionSucceeded,
+    ActionFailed,
 )
 from madsci.common.types.admin_command_types import AdminCommandResponse
 from madsci.common.types.node_types import RestNodeConfig
@@ -130,14 +130,12 @@ class HidexNode(RestNode):
         """Opens the plate carrier"""
         self.hidex_interface.OpenPlateCarrier()
         time.sleep(3)
-        return ActionSucceeded()
 
     @action(name="close", description="Closes the plate carrier")
     def close(self) -> None:
         """Closes the plate carrier"""
         self.hidex_interface.ClosePlateCarrier()
         time.sleep(5)
-        return ActionSucceeded()
 
     @action(
         name="run_assay", description="Runs the specificed assay on the current sample"
@@ -145,10 +143,11 @@ class HidexNode(RestNode):
     def run_assay(
         self,
         assay_name: Annotated[str, "Name of the assay to run"],
-        wait_for_result: Annotated[
-            bool, "Whether we should wait for the results of the assay before returning"
+        expect_data_file: Annotated[
+            bool, "Are you expecting a data file to be returned from this run_assay action?"
         ] = True,
-    ) -> Annotated[Path, "The assay result"]:
+    ) -> Annotated[Optional[Path], "The assay result"]:
+        # TODO: Dashboard bug: there's no way to set expect_data_file to False through dashboard..
         """Runs assay on the current sample"""
 
         self.cancelled = False
@@ -156,25 +155,39 @@ class HidexNode(RestNode):
         self.hidex_interface.SetAutoExportPath(str(self.config.output_path))
         self.hidex_interface.StartAssay(assay_name)
         while self.hidex_interface.GetState() == HidexService.InstrumentState.Busy:
+            # TODO: What is this for?
             pass
-        if bool(wait_for_result):
-            while not self.cancelled:
-                time.sleep(1)
-                files = list(Path(self.config.output_path).glob("*"))
-                if files:
-                    latest_file = max(files, key=os.path.getctime)
-                    if (
-                        latest_file.is_file()
-                        and latest_file.stat().st_birthtime > pre_submit_time
-                    ):
-                        break
-            else:
-                self.logger.log_debug("Assay cancelled before completion")
-                return ActionCancelled(errors=["Assay cancelled before completion"])
-            return ActionSucceeded(files={"assay_result": latest_file})
+
+        data_result = None
+        while not self.cancelled:
+            time.sleep(1)
+            self.logger.log_info("Waiting for assay to complete...")
+            files = list(Path(self.config.output_path).glob("*"))
+            if files:
+                latest_file = max(files, key=os.path.getctime)
+                if (
+                    latest_file.is_file()
+                    and latest_file.stat().st_birthtime > pre_submit_time
+                ):
+                    data_result = Path(latest_file)
+                    break
+        else:
+            self.logger.log_debug("Assay cancelled before completion")
+            return ActionCancelled(errors=["Assay cancelled before completion"])
+
         self.cancelled = False
 
+        if expect_data_file:
+            if data_result:
+                return data_result
+            # Return action failed if the expected data file could not be collected
+            return ActionFailed(errors=["No data file could be collected."])
+
+        # Return None if no data file result was expected
+        # Note: Ex. If using the assay to set the Hidex temperature and preheat
         return None
+
+
 
     def cancel(self) -> AdminCommandResponse:
         """Cancels the current assay"""
