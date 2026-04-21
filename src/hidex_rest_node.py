@@ -155,12 +155,13 @@ class HidexNode(RestNode):
         self.hidex_interface.SetAutoExportPath(str(self.config.output_path))
         self.hidex_interface.StartAssay(assay_name)
         while self.hidex_interface.GetState() == HidexService.InstrumentState.Busy:
-            # TODO: What is this for?
-            pass
+            time.sleep(0.5)
 
         data_result = None
+
         while not self.cancelled:
             time.sleep(1)
+
             self.logger.log_info("Waiting for assay to complete...")
             files = list(Path(self.config.output_path).glob("*"))
             if files:
@@ -177,16 +178,55 @@ class HidexNode(RestNode):
 
         self.cancelled = False
 
-        if expect_data_file:
-            if data_result:
-                return data_result
-            # Return action failed if the expected data file could not be collected
+        # Return None (success) if no data file was expected.
+        if not expect_data_file:
+            return None
+
+        # If data file was expected but no data_result path found, return ActionFailed.
+        if not data_result:
             return ActionFailed(errors=["No data file could be collected."])
 
-        # Return None if no data file result was expected
-        # Note: Ex. If using the assay to set the Hidex temperature and preheat
-        return None
+        # If data file was expected and data_result path was found but data was never ready, return ActionFailed.
+        if not self._wait_until_file_ready(data_result, timeout=600):
+            return ActionFailed(errors=["File was never ready (still locked or incomplete)."])
 
+        # Return data_path result if new data was found and is ready.
+        return data_result
+
+    def _wait_until_file_ready(
+        self,
+        file_path: Annotated[Path, "Path to the data file" ],
+        timeout: Annotated[int, "Timeout in seconds"] = 600,
+        interval: Annotated[int, "Interval in seconds to check if data file is ready"] = 1,
+    ) -> bool:
+        """
+        Waits for the data file to be ready before returning.
+        Data from longer assays takes time to populate in the Excel data file.
+        """
+        start = time.time()
+        last_size = -1
+
+        while True:
+            try:
+                current_size = file_path.stat().st_size
+
+                # Try opening the file (checks lock)
+                with open(file_path, "rb"):
+                    pass
+
+                # Check if size stopped changing
+                if current_size == last_size:
+                    return True
+
+                last_size = current_size
+
+            except (PermissionError, FileNotFoundError):
+                self.logger.log_info(f"Waiting for data file to be ready. Elapsed time = {int(time.time() - start)} seconds.")
+
+            if time.time() - start > timeout:
+                return False
+
+            time.sleep(interval)
 
 
     def cancel(self) -> AdminCommandResponse:
