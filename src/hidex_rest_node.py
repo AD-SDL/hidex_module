@@ -95,7 +95,7 @@ class HidexNode(RestNode):
         """Create or attach to the resources for this node"""
         self.resource_client.create_resource_from_template(
             template_name="hidex.nest",
-            resource_name=f"{self.node_definition.node_name}.nest",
+            resource_name=f"{self.node_info.node_name}.nest",
         )
 
     def shutdown_handler(self) -> None:
