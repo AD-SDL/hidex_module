@@ -5,7 +5,7 @@ REST-based node that interfaces with WEI and provides various fake actions for t
 import os
 import time
 from pathlib import Path, WindowsPath
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 import clr
 from madsci.common.types.action_types import (
@@ -13,7 +13,11 @@ from madsci.common.types.action_types import (
     ActionSucceeded,
 )
 from madsci.common.types.admin_command_types import AdminCommandResponse
-from madsci.common.types.node_types import RestNodeConfig
+from madsci.common.types.node_types import (
+    NodeIntrinsicLocationDefinition,
+    NodeRepresentationTemplateDefinition,
+    RestNodeConfig,
+)
 from madsci.common.types.resource_types import Slot
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
@@ -52,6 +56,41 @@ class HidexNode(RestNode):
     """Configuration for the Hidex Node"""
     module_version = "1.2.0"
     """Version of the Hidex Node module"""
+
+    # Location representation templates — registered automatically by template_handler()
+    location_representation_templates: ClassVar[
+        list[NodeRepresentationTemplateDefinition]
+    ] = [
+        NodeRepresentationTemplateDefinition(
+            template_name="hidex_carriage_repr",
+            default_values={"carriage_type": "standard", "capacity": 1},
+            schema_def={
+                "type": "object",
+                "properties": {
+                    "capacity": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "Number of plates the carriage can hold",
+                    },
+                },
+            },
+            required_overrides=[],
+            tags=["plate_reader", "carriage"],
+            version="1.0.0",
+            description="Hidex Sense carriage representation with capacity",
+        ),
+    ]
+
+    # Intrinsic locations — auto-created on startup with '{node_name}.' prefix
+    intrinsic_locations: ClassVar[list[NodeIntrinsicLocationDefinition]] = [
+        NodeIntrinsicLocationDefinition(
+            location_name="hidex_carriage",
+            description="Hidex Sense plate reader carriage.",
+            representation_template_name="hidex_carriage_repr",
+            resource_template_name="hidex.nest",
+            allow_transfers=True,
+        ),
+    ]
 
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Opens a connection to the Hidex."""
