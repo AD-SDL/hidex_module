@@ -1,153 +1,233 @@
-
-
 """
 REST-based node that interfaces with WEI and provides various fake actions for testing purposes
 """
-import clr
-clr.AddReference("C:\\Users\\rpl\\\source\\repos\\hidex_module\\hidex_node\\bin\\Debug\\HidexNode.dll")
-import System.ServiceModel as SM
-import System.ServiceModel.Channels as SMC
-import HidexNode.HidexAutomation as HA
-import System   
-import HidexNode as HN
-import time
-import glob
+
 import os
+import time
+from pathlib import Path, WindowsPath
+from typing import Annotated, ClassVar
 
-
-from typing import Annotated
-
-from fastapi import UploadFile
-from fastapi.datastructures import State
-from wei.modules.rest_module import RESTModule
-from wei.types import StepFileResponse, StepResponse, StepStatus
-from wei.types.step_types import StepSucceeded
-from wei.types.module_types import (
-    LocalFileModuleActionResult,
-    Location,
-    ModuleState,
-    ValueModuleActionResult,
-    ModuleStatus,
+import clr
+from madsci.common.types.action_types import (
+    ActionCancelled,
+    ActionSucceeded,
 )
-from wei.types.step_types import ActionRequest
-
-# * Test predefined action functions
-
-
-hidex_rest_node = RESTModule(
-    name="hidex_node",
-    description="A module to control the Hidex plate reader",
-    version="1.0.0",
-    resource_pools=[],
-    model="Hidex",
-    actions=[],
+from madsci.common.types.admin_command_types import AdminCommandResponse
+from madsci.common.types.node_types import (
+    NodeIntrinsicLocationDefinition,
+    NodeRepresentationTemplateDefinition,
+    RestNodeConfig,
 )
-hidex_rest_node.arg_parser.add_argument(
-    "--output_path",
-    type=str,
-    help="The starting amount of foo",
-    default="C:\\Users\\rpl\\Desktop\\results",
+from madsci.common.types.resource_types import Slot
+from madsci.node_module.helpers import action
+from madsci.node_module.rest_node_module import RestNode
+
+clr.AddReference(
+    str(
+        WindowsPath(__file__).parent
+        / "hidex_interface"
+        / "bin"
+        / "Debug"
+        / "HidexInterface.dll"
+    )
 )
+import HidexInterface  # type: ignore  # noqa: E402
+import HidexInterface.HidexService as HidexService  # type: ignore  # noqa: E402, PLR0402
+import System  # type: ignore  # noqa: E402
+from System import ServiceModel  # type: ignore # noqa: E402
+from System.ServiceModel import Channels  # type: ignore # noqa: E402
 
 
+class HidexNodeConfig(RestNodeConfig):
+    """Configuration for the Hidex REST node"""
+
+    output_path: Path = Path.home() / "Desktop" / "results"
+    """Path where the Hidex saves assay results"""
 
 
-@hidex_rest_node.startup()
-def test_node_startup(state: State):
-    """Initializes the module"""
-    sbe = SMC.ReliableSessionBindingElement()
-    binding = SMC.CustomBinding()
-    binding.Elements.Add(sbe)
-    binding.Elements.Add(SMC.BinaryMessageEncodingBindingElement())
-    binding.Elements.Add(SMC.NamedPipeTransportBindingElement())
-    t = HA.HidexSenseAutomationServiceClient(SM.InstanceContext(HN.Callback_Wrapper()), binding, SM.EndpointAddress(System.Uri("net.pipe://localhost/HidexSenseAutomation/")))
-    t.Connect(False)
-    c = t.GetState()
-    print(t.GetState() == c)
-    while t.GetState() == c:
-        print(t.GetState())
-        time.sleep(0.5)
-    print(t.GetState())
-    state.client = t
-    state.cancelled = False
+class HidexNode(RestNode):
+    """Hidex Node class for managing the Hidex plate reader"""
 
+    hidex_interface: HidexService.HidexSenseAutomationServiceClient = None
+    """Interface to the Hidex plate reader service"""
+    config_model = HidexNodeConfig
+    """Configuration model used by the Hidex Node"""
+    config: HidexNodeConfig = HidexNodeConfig()
+    """Configuration for the Hidex Node"""
+    module_version = "1.2.0"
+    """Version of the Hidex Node module"""
 
-@hidex_rest_node.state_handler()
-def state_handler(state: State) -> ModuleState:
-    """Handles the state of the module"""
-    if state.client.GetState() == HA.InstrumentState.Idle:
-        state.status = ModuleStatus.IDLE
-    elif state.client.GetState() == HA.InstrumentState.Busy:
-        state.status = ModuleStatus.BUSY
-    return ModuleState(status=state.status)
+    # Location representation templates — registered automatically by template_handler()
+    location_representation_templates: ClassVar[
+        list[NodeRepresentationTemplateDefinition]
+    ] = [
+        NodeRepresentationTemplateDefinition(
+            template_name="hidex_carriage_repr",
+            default_values={"carriage_type": "standard", "capacity": 1},
+            schema_def={
+                "type": "object",
+                "properties": {
+                    "capacity": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "Number of plates the carriage can hold",
+                    },
+                },
+            },
+            required_overrides=[],
+            tags=["plate_reader", "carriage"],
+            version="1.0.0",
+            description="Hidex Sense carriage representation with capacity",
+        ),
+    ]
 
+    # Intrinsic locations — auto-created on startup with '{node_name}.' prefix
+    intrinsic_locations: ClassVar[list[NodeIntrinsicLocationDefinition]] = [
+        NodeIntrinsicLocationDefinition(
+            location_name="hidex_carriage",
+            description="Hidex Sense plate reader carriage.",
+            representation_template_name="hidex_carriage_repr",
+            resource_template_name="hidex.nest",
+            allow_transfers=True,
+        ),
+    ]
 
+    def startup_handler(self) -> None:
+        """Called to (re)initialize the node. Opens a connection to the Hidex."""
+        self.initialize_resource_templates()
+        self.create_resources()
 
-
-@hidex_rest_node.action()
-def open(
-    state: State,
-    action: ActionRequest,
-) -> StepResponse:
-    """opens plate carrier"""
-    state.client.OpenPlateCarrier()
-    time.sleep(1)
-    return StepResponse.step_succeeded()
-
-@hidex_rest_node.action()
-def close(
-    state: State,
-    action: ActionRequest,
-) -> StepResponse:
-    """closes plate carrier"""
-    state.client.ClosePlateCarrier()
-    time.sleep(1)
-    return StepResponse.step_succeeded()
-
-
-
-@hidex_rest_node.action(
-    name="run_assay",
-    results=[
-        LocalFileModuleActionResult(label="assay_result", description="result file from the assay"),
-    ],
-)
-def run_assay(state: State, action: ActionRequest,
-                   assay_name: Annotated[str, "assay to run"], wait_for_result: Annotated[bool, "Whether we should wait for the results of the assay before returning"] = True) -> StepFileResponse:
-    """runs assay on the current sample"""
-
-    list_of_files = glob.glob(state.output_path +'\\*') # * means all if need specific format then *.csv
-    latest_file = max(list_of_files, key=os.path.getctime)
-    prev_file = latest_file
-    print(latest_file)
-    state.client.SetAutoExportPath(state.output_path)
-    state.client.StartAssay(assay_name)
-    while state.client.GetState() == HA.InstrumentState.Busy:
-        pass
-    if bool(wait_for_result) and not state.cancelled:
-        while latest_file == prev_file:
-            list_of_files = glob.glob(state.output_path +'\\*') # * means all if need specific format then *.csv
-            latest_file = max(list_of_files, key=os.path.getctime)
-            time.sleep(0.5)
-        return StepFileResponse(
-            StepStatus.SUCCEEDED,
-            files={"assay_result": latest_file},
+        sbe = Channels.ReliableSessionBindingElement()
+        binding = Channels.CustomBinding()
+        binding.Elements.Add(sbe)
+        binding.Elements.Add(Channels.BinaryMessageEncodingBindingElement())
+        binding.Elements.Add(Channels.NamedPipeTransportBindingElement())
+        self.hidex_interface = HidexService.HidexSenseAutomationServiceClient(
+            ServiceModel.InstanceContext(HidexInterface.Callback_Wrapper()),
+            binding,
+            ServiceModel.EndpointAddress(
+                System.Uri("net.pipe://localhost/HidexSenseAutomation/")
+            ),
         )
-    else:
-        state.cancelled = False
-        return StepSucceeded()
+        self.hidex_interface.Connect(False)
+        state = self.hidex_interface.GetState()
+        self.logger.log_debug(self.hidex_interface.GetState() == state)
+        while self.hidex_interface.GetState() == state:
+            self.logger.log_debug(self.hidex_interface.GetState())
+            time.sleep(0.5)
+        self.logger.log_debug(self.hidex_interface.GetState())
+        self.cancelled = False
+        self.logger.log("Hidex node initialized!")
 
-@hidex_rest_node.cancel()
-def cancel(state: State):
-    state.client.StopAssay()
-    state.cancelled = True
-    state.status = ModuleStatus.IDLE
+    def initialize_resource_templates(self) -> None:
+        """Initialize the resource templates for the Hidex Node Module"""
+        self.resource_client.create_template(
+            template_name="hidex.nest",
+            description="Plate nest for a Hidex Sense Plate Reader",
+            resource=Slot(
+                resource_description="Plate nest for a Hidex Node",
+            ),
+            version="1.0.0",
+        )
 
-@hidex_rest_node.shutdown()
-def shutdown(state: State):
-    state.client.Disconnect()
+    def create_resources(self) -> None:
+        """Create or attach to the resources for this node"""
+        self.resource_client.create_resource_from_template(
+            template_name="hidex.nest",
+            resource_name=f"{self.node_info.node_name}.nest",
+        )
+
+    def shutdown_handler(self) -> None:
+        """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
+        self.logger.log("Shutting down")
+        self.hidex_interface.Disconnect()
+        self.hidex_interface = None
+        self.logger.log("Hidex node shutdown successfully!")
+
+    def state_handler(self) -> None:
+        """Handles the state of the Hidex node"""
+        if not self.hidex_interface or self.node_status.initializing:
+            return
+
+        if self.hidex_interface.GetState() == HidexService.InstrumentState.Idle:
+            self.node_state = {
+                "hidex_status_code": "READY",
+            }
+        elif self.hidex_interface.GetState() == HidexService.InstrumentState.Busy:
+            self.node_state = {
+                "hidex_status_code": "BUSY",
+            }
+            self.logger.info("BUSY")
+        else:
+            self.node_state = {
+                "hidex_status_code": "UNKNOWN",
+            }
+            self.logger.info("UNKNOWN")
+
+    @action(name="open", description="Open the plate carrier")
+    def open(self) -> None:
+        """Opens the plate carrier"""
+        self.hidex_interface.OpenPlateCarrier()
+        time.sleep(3)
+        return ActionSucceeded()
+
+    @action(name="close", description="Closes the plate carrier")
+    def close(self) -> None:
+        """Closes the plate carrier"""
+        self.hidex_interface.ClosePlateCarrier()
+        time.sleep(5)
+        return ActionSucceeded()
+
+    @action(
+        name="run_assay", description="Runs the specificed assay on the current sample"
+    )
+    def run_assay(
+        self,
+        assay_name: Annotated[str, "Name of the assay to run"],
+        wait_for_result: Annotated[
+            bool, "Whether we should wait for the results of the assay before returning"
+        ] = True,
+    ) -> Annotated[Path, "The assay result"]:
+        """Runs assay on the current sample"""
+
+        self.cancelled = False
+        pre_submit_time = time.time()
+        self.hidex_interface.SetAutoExportPath(str(self.config.output_path))
+        self.hidex_interface.StartAssay(assay_name)
+        while self.hidex_interface.GetState() == HidexService.InstrumentState.Busy:
+            pass
+        if bool(wait_for_result):
+            while not self.cancelled:
+                time.sleep(1)
+                files = list(Path(self.config.output_path).glob("*"))
+                if files:
+                    latest_file = max(files, key=os.path.getctime)
+                    if (
+                        latest_file.is_file()
+                        and latest_file.stat().st_birthtime > pre_submit_time
+                    ):
+                        break
+            else:
+                self.logger.log_debug("Assay cancelled before completion")
+                return ActionCancelled(errors=["Assay cancelled before completion"])
+            return ActionSucceeded(files={"assay_result": latest_file})
+        self.cancelled = False
+
+        return None
+
+    def cancel(self) -> AdminCommandResponse:
+        """Cancels the current assay"""
+        try:
+            self.hidex_interface.StopAssay()
+            self.cancelled = True
+            return AdminCommandResponse(
+                success=True,
+            )
+        except Exception as e:
+            self.logger.log_error(f"Error cancelling assay: {e}")
+            return AdminCommandResponse(success=False, errors=[e])
 
 
 if __name__ == "__main__":
-    hidex_rest_node.start()
-
+    hidex_node = HidexNode()
+    hidex_node.start_node()

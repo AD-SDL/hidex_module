@@ -1,0 +1,7 @@
+node_name: default.node
+node_id: 01KA2A8X6YVXP01W9HY8QESN60
+node_description: null
+node_type: device
+module_name: hidex_node
+module_version: 0.0.1
+capabilities: null
